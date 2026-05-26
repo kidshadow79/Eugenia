@@ -58,6 +58,7 @@ class EditorZone(QWidget):
         self._embedded_hwnd: int | None = None
         self._original_style: int = 0
         self._original_exstyle: int = 0
+        self._original_placement = None
         self._setup_ui()
 
     @property
@@ -215,13 +216,16 @@ class EditorZone(QWidget):
         return selected[0].data(0, Qt.ItemDataRole.UserRole)
 
     def _embed(self, hwnd: int):
-        """Reparente hwnd dans ce widget et retire sa chrome."""
+        """Reparente hwnd dans ce widget via createWindowContainer."""
         try:
+            # Sauvegarde de l'etat exact de la fenetre (taille, position, plein ecran)
+            self._original_placement = win32gui.GetWindowPlacement(hwnd)
+            
             # Sauvegarde des styles originaux pour restauration
             self._original_style = win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
             self._original_exstyle = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
 
-            # Retire la barre de titre, les bordures, les frames
+            # Retire la barre de titre, les bordures
             new_style = (
                 self._original_style
                 & ~win32con.WS_CAPTION
@@ -232,26 +236,42 @@ class EditorZone(QWidget):
                 & ~win32con.WS_MINIMIZEBOX
                 & ~win32con.WS_MAXIMIZEBOX
             )
-            new_style |= win32con.WS_CHILD
+            # Ne pas forcer manuellement WS_CHILD, on laisse Qt gerer
             win32gui.SetWindowLong(hwnd, win32con.GWL_STYLE, new_style)
+            
+            # Utilisation du conteneur natif Qt
+            from PyQt6.QtGui import QWindow
+            self._embedded_qwindow = QWindow.fromWinId(hwnd)
+            
+            # On autorise la fenetre a capter le clavier
+            self._embedded_widget = QWidget.createWindowContainer(self._embedded_qwindow, self)
+            self._embedded_widget.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+            
+            # Ajout du container par dessus le placeholder
+            self.layout().addWidget(self._embedded_widget)
 
-            # Force le recalcul du frame
+            # Force le recalcul du frame win32
             win32gui.SetWindowPos(
                 hwnd, 0, 0, 0, 0, 0,
                 win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
                 | win32con.SWP_NOZORDER | win32con.SWP_FRAMECHANGED
             )
-
-            # Reparente dans ce widget
-            our_hwnd = int(self.winId())
-            win32gui.SetParent(hwnd, our_hwnd)
-
+            
             self._embedded_hwnd = hwnd
             self._placeholder.setVisible(False)
-            self._resize_embedded()
+
+            # Demarrage du scanner de clic souris pour le focus clavier dynamique
+            if not hasattr(self, '_click_timer'):
+                self._click_timer = QTimer(self)
+                self._click_timer.timeout.connect(self._check_mouse_clicks)
+            self._click_timer.start(50)
+
+            # On donne le focus immediatement apres l'embed
+            QTimer.singleShot(100, self._give_focus_to_browser)
+
             self.editor_attached.emit()
             self.hwnd_changed.emit(hwnd)
-            logger.info("EditorZone._embed — hwnd=%d embarque", hwnd)
+            logger.info("EditorZone._embed — hwnd=%d embarque via createWindowContainer", hwnd)
 
         except Exception as exc:
             logger.error("EditorZone._embed — echec : %s", exc)
@@ -261,17 +281,39 @@ class EditorZone(QWidget):
         """Restaure la fenetre embarquee comme fenetre independante."""
         if self._embedded_hwnd is None:
             return
+
+        if hasattr(self, '_click_timer'):
+            self._click_timer.stop()
+
         hwnd = self._embedded_hwnd
         try:
+            # 1. Retirer du layout Qt et detruire le container proprement
+            if hasattr(self, '_embedded_widget'):
+                self.layout().removeWidget(self._embedded_widget)
+                self._embedded_widget.setParent(None)
+                self._embedded_widget.deleteLater()
+                del self._embedded_widget
+                
+            if hasattr(self, '_embedded_qwindow'):
+                self._embedded_qwindow.setParent(None)
+                del self._embedded_qwindow
+
+            # 3. Restaurer le parent natif a 0 (Bureau) et les styles
+            win32gui.SetParent(hwnd, 0)
             win32gui.SetWindowLong(hwnd, win32con.GWL_STYLE, self._original_style)
             win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, self._original_exstyle)
-            win32gui.SetWindowPos(
-                hwnd, 0, 0, 0, 0, 0,
-                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
-                | win32con.SWP_NOZORDER | win32con.SWP_FRAMECHANGED
-            )
-            win32gui.SetParent(hwnd, 0)
-            win32gui.ShowWindow(hwnd, win32con.SW_SHOWDEFAULT)
+            
+            # 4. Restaurer la taille, position et etat exacts
+            if self._original_placement:
+                win32gui.SetWindowPlacement(hwnd, self._original_placement)
+                self._original_placement = None
+            else:
+                win32gui.SetWindowPos(
+                    hwnd, 0, 0, 0, 0, 0,
+                    win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
+                    | win32con.SWP_NOZORDER | win32con.SWP_FRAMECHANGED
+                )
+                win32gui.ShowWindow(hwnd, win32con.SW_SHOWDEFAULT)
 
             self._embedded_hwnd = None
             self._placeholder.setVisible(True)
@@ -293,38 +335,79 @@ class EditorZone(QWidget):
     def closeEvent(self, event):
         """Detache l'editeur avant la destruction du widget pour eviter la fenetre orpheline."""
         if self._embedded_hwnd is not None:
-            try:
-                win32gui.SetWindowLong(self._embedded_hwnd, win32con.GWL_STYLE, self._original_style)
-                win32gui.SetWindowLong(self._embedded_hwnd, win32con.GWL_EXSTYLE, self._original_exstyle)
-                win32gui.SetParent(self._embedded_hwnd, 0)
-                win32gui.ShowWindow(self._embedded_hwnd, win32con.SW_SHOWDEFAULT)
-                logger.info(
-                    "EditorZone.closeEvent — hwnd=%d rendu independant avant fermeture",
-                    self._embedded_hwnd,
-                )
-            except Exception as exc:
-                logger.warning("EditorZone.closeEvent — detach echoue : %s", exc)
-            finally:
-                self._embedded_hwnd = None
+            self.detach_editor()
         super().closeEvent(event)
 
     # ------------------------------------------------------------------
-    # Redimensionnement
+    # Focus Clavier pour les navigateurs Multi-Processus
     # ------------------------------------------------------------------
 
-    def _resize_embedded(self):
-        """Ajuste la fenetre embarquee pour remplir ce widget."""
-        if self._embedded_hwnd is None:
+    def _check_mouse_clicks(self):
+        """Scrute les clics de souris pour forcer le focus sur le navigateur embarque."""
+        if not self._embedded_hwnd or not self.window().isActiveWindow():
             return
-        try:
-            our_hwnd = int(self.winId())
-            rect = win32gui.GetClientRect(our_hwnd)
-            w = rect[2] - rect[0]
-            h = rect[3] - rect[1]
-            win32gui.MoveWindow(self._embedded_hwnd, 0, 0, w, h, True)
-        except Exception as exc:
-            logger.warning("EditorZone._resize_embedded — %s", exc)
+            
+        import win32api
+        lbtn = (win32api.GetAsyncKeyState(win32con.VK_LBUTTON) & 0x8000) != 0
+        rbtn = (win32api.GetAsyncKeyState(win32con.VK_RBUTTON) & 0x8000) != 0
+        
+        if lbtn or rbtn:
+            try:
+                x, y = win32gui.GetCursorPos()
+                tl = self.mapToGlobal(self.rect().topLeft())
+                br = self.mapToGlobal(self.rect().bottomRight())
+                
+                # Si le clic a lieu dans la zone d'edition
+                if tl.x() <= x <= br.x() and tl.y() <= y <= br.y():
+                    self._give_focus_to_browser()
+            except Exception:
+                pass
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._resize_embedded()
+    def _give_focus_to_browser(self):
+        """Hacking win32 pour forcer le focus clavier sur le vrai HWND de rendu de Chrome/Firefox."""
+        if not self._embedded_hwnd:
+            return
+            
+        try:
+            # 1. Simuler l'activation pour tromper les toolkits externes (Chrome Aura)
+            win32gui.SendMessage(self._embedded_hwnd, win32con.WM_ACTIVATE, win32con.WA_ACTIVE, 0)
+            
+            # 2. Chercher la vraie zone de texte (le sous-composant de rendu)
+            target_hwnd = self._embedded_hwnd
+            def cb(child, _):
+                nonlocal target_hwnd
+                cls = win32gui.GetClassName(child)
+                if cls in ("Chrome_RenderWidgetHostHWND", "MozillaWindowClass", "SALFRAME", "_WwG", "OpusApp"):
+                    target_hwnd = child
+                    return False
+                return True
+                
+            try:
+                win32gui.EnumChildWindows(self._embedded_hwnd, cb, None)
+            except Exception:
+                pass
+                
+            # 3. Voler le focus au niveau OS (Attachement thread eclair)
+            import ctypes
+            user32 = ctypes.windll.user32
+            kernel32 = ctypes.windll.kernel32
+            
+            current_thread = kernel32.GetCurrentThreadId()
+            target_thread = user32.GetWindowThreadProcessId(target_hwnd, None)
+            
+            attached = False
+            if target_thread and target_thread != current_thread:
+                attached = user32.AttachThreadInput(current_thread, target_thread, True)
+                
+            win32gui.SetFocus(target_hwnd)
+            
+            # On detache immediatement pour eviter le blocage / lags du navigateur
+            if attached:
+                user32.AttachThreadInput(current_thread, target_thread, False)
+                
+        except Exception as e:
+            logger.warning("EditorZone._give_focus_to_browser — echec du focus : %s", e)
+
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        self._give_focus_to_browser()
