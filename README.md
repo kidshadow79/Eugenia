@@ -27,9 +27,9 @@ While EUGENIA includes its own editing environment, it is designed to run alongs
 * **Smart Clipboard Tracking:** Read and update your system clipboard to speed up copy-paste iteration loops.
 
 <p align="center">
-  <img src="assets/capture.png" alt="EUGENIA Main Interface" width="800"/>
+  <img src="assets/capture.png" alt="EUGENIA Companion Integrated with LibreOffice Writer" width="800"/>
   <br/>
-  <em>EUGENIA Main Interface</em>
+  <em>EUGENIA Companion Interface integrated with LibreOffice Writer</em>
 </p>
 
 <p align="center">

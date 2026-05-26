@@ -27,9 +27,9 @@ Bien qu'EUGENIA dispose de sa propre interface d'édition, l'application est con
 * **Gestion Avancée du Presse-papiers :** Analyse et modifie le presse-papiers système en temps réel pour fluidifier les itérations de copier-coller.
 
 <p align="center">
-  <img src="assets/capture.png" alt="Interface Principale d'EUGENIA" width="800"/>
+  <img src="assets/capture.png" alt="Interface Compagnon d'EUGENIA intégrée à LibreOffice Writer" width="800"/>
   <br/>
-  <em>Interface Principale d'EUGENIA</em>
+  <em>Interface Compagnon d'EUGENIA intégrée à LibreOffice Writer</em>
 </p>
 
 <p align="center">
