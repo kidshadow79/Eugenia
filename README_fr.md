@@ -2,19 +2,60 @@
 
 *Lire ce document en [English](README.md)*
 
-**EUGENIA** est un assistant d'écriture IA avancé et doté d'une mémoire cognitive profonde, conçu spécifiquement pour les auteurs, écrivains et créateurs. Grâce à une architecture cognitive évoluée, EUGENIA apprend au fil de vos interactions, se souvient de vos sessions passées et vous apporte une aide à l'écriture hautement personnalisée avec une continuité de contexte exceptionnelle.
+**EUGENIA** est un assistant d'écriture IA avancé et doté d'une mémoire cognitive profonde, conçu spécifiquement pour les romanciers, auteurs et créateurs. Bien plus qu'un simple éditeur de texte, EUGENIA est conçu comme un compagnon cognitif qui s'adapte à votre voix créative, mémorise l'univers de votre récit (lore) et s'intègre harmonieusement avec vos outils d'écriture existants.
 
-## Fonctionnalités Clés
+---
 
-* **🧠 Mémoire Cognitive Profonde :** Eugenia se rappelle qui vous êtes et ce dont vous avez parlé. Elle combine une base de données relationnelle, un système de document persistant ("Bibles") et une recherche vectorielle sémantique (FAISS) pour retrouver vos sessions passées de façon naturelle.
-* **📚 Le Système Archiviste :** Un module sophistiqué de lecture et d'écriture interne qui analyse vos textes, synthétise l'information et injecte le contexte utile dans la discussion sans surcharger la mémoire de travail de l'IA.
-* **🎭 Ego & Personnalité Dynamiques :** EUGENIA adapte son ton et son comportement grâce à l' "Ego Manager", qui compile dynamiquement ses instructions système en fonction de règles établies et des interactions passées.
-* **🎨 Interface Moderne et Thémable :** Une interface graphique premium développée en PySide6, entièrement personnalisable avec des modes clair, sombre et des thèmes spéciaux (comme le Glassmorphism), optimisant les contrastes et le confort de lecture.
-* **🔒 Confidentialité et Sécurité :** Conçu pour respecter votre vie privée. Les données personnelles, clés API et journaux d'activité (logs) internes sont gérés de manière sécurisée.
+## Les Piliers Majeurs
 
-## Démarrage Rapide (Windows)
+### 1. Système de Mémoire Double ("Bicéphale")
+EUGENIA sépare les connaissances en deux hémisphères distincts pour s'assurer que l'IA ne confonde jamais l'auteur et son œuvre :
+* **Mémoire Relationnelle (La Sphère Créateur) :** Mémorise les détails sur *vous*, l'auteur. Elle garde une trace de vos règles d'écriture, de vos préférences stylistiques, de vos habitudes de vocabulaire, de vos retours d'expérience et de votre parcours personnel. Cela rend les interactions familières, continues et fluides.
+* **Mémoire Projet (La Sphère Roman) :** Stocke l'univers (lore), les personnages, la chronologie et les intrigues de votre projet. Cette mémoire est gérée par des bases de données SQLite dynamiques et des **Bibles** personnalisées contenant des fiches structurées.
 
-L'installation d'EUGENIA est optimisée pour être simple et directe sur Windows.
+### 2. Moteur d'Ego Adaptatif
+L'**Ego Manager** agit comme le filtre comportemental de l'IA. Au lieu d'utiliser des instructions système figées (system prompts), EUGENIA compile de manière dynamique un ensemble de règles comportementales issues de vos échanges. Elle adapte ainsi son ton, ses critiques et ses suggestions à votre démarche artistique personnelle.
+
+### 3. Compagnon pour Applications Tierces (Intégration Native)
+Bien qu'EUGENIA dispose de sa propre interface d'édition, l'application est conçue pour tourner en tâche de fond et venir se greffer sur vos logiciels de traitement de texte favoris (comme **Scrivener, MS Word, Google Docs ou des éditeurs de code**) :
+* **Capture d'Écran Graphique & OCR :** Capturez instantanément une zone de votre logiciel d'écriture tiers pour qu'EUGENIA lise et analyse le paragraphe en cours grâce à un puissant moteur OCR.
+* **Superposition et Analyse de Fenêtre Active :** Capable de s'accrocher à une autre fenêtre de travail pour lire le texte à la volée, l'annoter ou afficher des bulles d'aide directement au-dessus de votre traitement de texte.
+* **Gestion Avancée du Presse-papiers :** Analyse et modifie le presse-papiers système en temps réel pour fluidifier les itérations de copier-coller.
+
+### 4. Chunking Sémantique & Bibles
+Pour gérer des manuscrits de centaines de milliers de mots sans dépasser les limites de contexte des modèles d'IA :
+* Les longs textes sont découpés en blocs sémantiques cohérents ("chunks"), puis vectorisés et stockés dans une base de données **FAISS**.
+* Le système récupère automatiquement les blocs de contexte les plus pertinents par rapport à votre position de curseur ou vos questions.
+* Créez, organisez et interrogez des Bibles spécialisées (fiches de personnages, géographie du monde, systèmes de magie).
+
+---
+
+## 🛠️ Configuration & Choix des Modèles
+
+EUGENIA vous permet de configurer vos clés API pour utiliser vos modèles de langage (LLM) et vos services de vectorisation préférés.
+
+### ⚠️ Conseil Critique concernant l'Embedding
+* **Modèle Recommandé :** Il est fortement conseillé d'utiliser **`mistral-embed`** pour la vectorisation de vos textes.
+* **AVERTISSEMENT CRUCIAL :** Ne changez **JAMAIS** de modèle d'embedding au cours d'un projet. Changer de modèle (ex: passer des embeddings d'OpenAI à ceux de Mistral) rendra vos bases de données vectorielles et vos caches incompatibles. Vous seriez alors contraint de re-vectoriser tout votre projet et vos Bibles depuis le début.
+
+---
+
+## 👥 Multi-Profil & Multi-Projet
+EUGENIA permet de gérer indépendamment plusieurs auteurs (profils) et plusieurs récits ou univers (projets) sur la même machine. Chaque projet dispose de sa propre base SQLite, de son index FAISS et de sa configuration dédiée.
+
+---
+
+## 🚀 Démarrage Rapide (Windows)
+
+### Prérequis & Outils de Compilation
+Pour compiler et exécuter proprement certaines bibliothèques natives (comme `faiss-cpu` ou `numpy`), vérifiez que votre machine Windows possède :
+1. **Python 3.10 ou 3.11** (Ajouté au `PATH` système).
+2. **Microsoft C++ Build Tools :**
+   * Téléchargez et installez les [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
+   * Cochez la charge de travail **"Développement Desktop en C++"** (Desktop development with C++). Cela est indispensable si pip doit recompiler des modules natifs C++.
+3. **Microsoft Visual C++ Redistributable** installé sur le système.
+
+### Installation
 
 1. **Cloner le dépôt :**
    ```bash
@@ -22,20 +63,9 @@ L'installation d'EUGENIA est optimisée pour être simple et directe sur Windows
    cd Eugenia
    ```
 
-2. **Installation :**
-   Double-cliquez simplement sur le raccourci `Installer_EUGENIA`, ou lancez `install.bat` depuis votre terminal.
-   Le script créera automatiquement un environnement virtuel Python isolé (`venv`) et y installera toutes les dépendances requises listées dans `requirements.txt`.
+2. **Lancer l'installateur :**
+   Double-cliquez sur le raccourci `Installer_EUGENIA` (ou lancez `install.bat`).
+   Ce script créera automatiquement un environnement virtuel Python propre (`venv`) et y installera toutes les dépendances listées dans `requirements.txt`.
 
-3. **Lancement d'EUGENIA :**
-   Une fois installé, double-cliquez sur le raccourci `Demarrer_EUGENIA`, ou exécutez `run.bat`. Le script activera l'environnement virtuel et démarrera l'application principale.
-
-## Prérequis
-- Python 3.10+
-- Les dépendances sont gérées automatiquement lors de l'installation.
-
-## Aperçu de l'Architecture
-- **UI/UX (`ui/`)** : Contient la fenêtre principale de l'application, les styles, thèmes et les boîtes de dialogue de configuration.
-- **Moteur Principal (`core/`)** : Contient le moteur IA, le cache de contexte, la gestion de l'Ego, l'indexation vectorielle sémantique (FAISS) et les interfaces d'API.
-
-## Licence
-*Tous droits réservés.*
+3. **Lancement :**
+   Double-cliquez sur le raccourci `Demarrer_EUGENIA` (ou lancez `run.bat`).
