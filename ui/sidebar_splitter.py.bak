@@ -1,0 +1,57 @@
+﻿"""
+sidebar_splitter.py -- QSplitter horizontal avec bordure visible et draggable.
+
+Le redimensionnement se fait en tirant la bordure.
+Le repli/deploi des sidebars se gere via les signaux de chaque panneau.
+"""
+
+from PyQt6.QtWidgets import QSplitter, QSplitterHandle
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPainter, QColor
+
+_HANDLE_W = 14   # largeur totale de la zone draggable (px)
+_GRIP_H   = 32   # hauteur de la tirette visuelle (px)
+_DOT_GAP  = 5    # espacement entre les points de la tirette
+
+
+class _BorderHandle(QSplitterHandle):
+    """Handle avec tirette centrale visible et zone de capture elargie."""
+
+    def __init__(self, orientation, parent):
+        super().__init__(orientation, parent)
+        self.setCursor(Qt.CursorShape.SplitHCursor)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w  = self.width()
+        h  = self.height()
+        cx = w // 2
+
+        # Ligne de separation fine
+        painter.fillRect(cx, 0, 1, h, QColor("#3e3e42"))
+
+        # Fond de la tirette, centre verticalement
+        grip_y = (h - _GRIP_H) // 2
+        painter.fillRect(cx - 3, grip_y, 6, _GRIP_H, QColor("#4a4a4f"))
+
+        # Points de grip contrastes
+        dot = QColor("#aaaaaa")
+        n   = _GRIP_H // _DOT_GAP
+        for i in range(n):
+            y = grip_y + i * _DOT_GAP + 3
+            painter.fillRect(cx - 1, y, 2, 2, dot)
+
+        painter.end()
+
+
+class SidebarSplitter(QSplitter):
+    """QSplitter horizontal dont les handles ont une tirette visible et une zone de 14px."""
+
+    def __init__(self, parent=None):
+        super().__init__(Qt.Orientation.Horizontal, parent)
+        self.setHandleWidth(_HANDLE_W)
+
+    def createHandle(self) -> _BorderHandle:
+        return _BorderHandle(self.orientation(), self)

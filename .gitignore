@@ -1,0 +1,31 @@
+# ─── Données sensibles — NE JAMAIS COMMITTER ─────────────────────────────────
+data/config/app_config.json
+
+# ─── Données utilisateur locales (non versionnées) ───────────────────────────
+data/bible/
+data/relational/
+data/vectors/
+logs/
+files/
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDE ─────────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+
+# ─── VERSIONNÉ (ne pas ignorer) ──────────────────────────────────────────────
+# data/config/prompts.json   ← prompts personnalisables, commitable
+# data/config/              ← le dossier lui-même est versionné
