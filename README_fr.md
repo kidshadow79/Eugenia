@@ -47,13 +47,10 @@ EUGENIA permet de gérer indépendamment plusieurs auteurs (profils) et plusieur
 
 ## 🚀 Démarrage Rapide (Windows)
 
-### Prérequis & Outils de Compilation
-Pour compiler et exécuter proprement certaines bibliothèques natives (comme `faiss-cpu` ou `numpy`), vérifiez que votre machine Windows possède :
-1. **Python 3.10 ou 3.11** (Ajouté au `PATH` système).
-2. **Microsoft C++ Build Tools :**
-   * Téléchargez et installez les [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
-   * Cochez la charge de travail **"Développement Desktop en C++"** (Desktop development with C++). Cela est indispensable si pip doit recompiler des modules natifs C++.
-3. **Microsoft Visual C++ Redistributable** installé sur le système.
+### Prérequis & Facilité d'Installation
+* **Python 3.10+ :** Requis. Si Python n'est pas installé sur votre machine, l'installateur d'EUGENIA (`install.bat`) **tente automatiquement de l'installer pour vous** via le gestionnaire de paquets Windows officiel (`winget`).
+* **Outils de Compilation C++ (Build Tools) :** **NON requis** pour une installation classique ! Les bibliothèques comme `faiss-cpu` et `numpy` s'installent directement à partir de fichiers précompilés (wheels) disponibles sur PyPI.
+* *Note : Le seul composant Windows usuel nécessaire est le package standard "Microsoft Visual C++ Redistributable", déjà présent sur la quasi-totalité des machines modernes.*
 
 ### Installation
 

@@ -47,13 +47,10 @@ EUGENIA supports managing multiple authors (profiles) and multiple universes/nov
 
 ## 🚀 Getting Started (Windows)
 
-### Prerequisites & Build Tools
-To compile and run native libraries (like `faiss-cpu` or `numpy`) smoothly, please ensure you have the following installed on your Windows machine:
-1. **Python 3.10 or 3.11** (Ensure it is added to your system `PATH`).
-2. **Microsoft C++ Build Tools:**
-   * Download and install the [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/).
-   * During installation, check the **"Desktop development with C++"** workload. This is required to compile Python C-extensions if pre-built wheels are not available.
-3. **Microsoft Visual C++ Redistributable** installed.
+### Prerequisites & Installation Ease
+* **Python 3.10+:** Required. If you do not have Python installed, EUGENIA's installer (`install.bat`) will **automatically attempt to install it for you** using the Windows Package Manager (`winget`).
+* **C++ Build Tools:** **NOT required** for typical installations! Libraries like `faiss-cpu` and `numpy` install directly using precompiled binary packages (wheels) from PyPI. 
+* *Note: The only common Windows component required is the standard Microsoft Visual C++ Redistributable, which is already installed on almost all modern Windows systems.*
 
 ### Installation
 
