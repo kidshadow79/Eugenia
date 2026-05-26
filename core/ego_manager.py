@@ -253,6 +253,42 @@ class EgoManager:
         self._scan_count: int = 0
         self._journal: list = []
 
+    def _parse_flat_rules(self, text: str) -> dict[str, list[dict]]:
+        parsed_cats = {}
+        import re
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            m = re.match(r"^\[(.*?)\]\s*(.*)$", line)
+            if m:
+                cat = m.group(1).strip()
+                rule_text = m.group(2).strip()
+                if cat not in EGO_CATEGORIES:
+                    cat = "Stylistique"
+            else:
+                cat = "Stylistique"
+                rule_text = line
+            
+            if cat not in parsed_cats:
+                parsed_cats[cat] = []
+            
+            rule_id = str(uuid.uuid4())[:8]
+            # Match existing rule to keep force/actif/id if possible
+            found = False
+            if hasattr(self, "_categories") and isinstance(self._categories, dict) and cat in self._categories:
+                for existing_rule in self._categories[cat]:
+                    if existing_rule.get("texte") == rule_text:
+                        rule_id = existing_rule.get("id", rule_id)
+                        force = existing_rule.get("force", 3)
+                        actif = existing_rule.get("actif", True)
+                        parsed_cats[cat].append({"id": rule_id, "texte": rule_text, "actif": actif, "force": force})
+                        found = True
+                        break
+            if not found:
+                parsed_cats[cat].append({"id": rule_id, "texte": rule_text, "actif": True, "force": 3})
+        return parsed_cats
+
     def load(self, author_dir: Path) -> None:
         self._path = author_dir / _EGO_FILE
         author_dir.mkdir(parents=True, exist_ok=True)
@@ -262,6 +298,8 @@ class EgoManager:
                 data = json.load(f)
             
             self._categories = data.get("categories", {})
+            if isinstance(self._categories, str):
+                self._categories = self._parse_flat_rules(self._categories)
             self._active_categories = data.get("active_categories", [])
             self._last_scanned_at = data.get("last_scanned_at", "")
             self._scan_count = int(data.get("scan_count", 0))
@@ -271,10 +309,13 @@ class EgoManager:
             self._last_scanned_at = ""
             self._scan_count = 0
 
-    def save(self, categories: dict = None) -> None:
+    def save(self, categories = None) -> None:
         if self._path is None: return
         if categories is not None:
-            self._categories = categories
+            if isinstance(categories, str):
+                self._categories = self._parse_flat_rules(categories)
+            else:
+                self._categories = categories
             
         self._last_scanned_at = datetime.now().isoformat(timespec="seconds")
         temp = self._path.with_suffix(".tmp")
@@ -293,8 +334,12 @@ class EgoManager:
         self._scan_count += 1
         self.save(new_categories)
         
-    def set_active_categories(self, categories: list[str]) -> None:
-        self._active_categories = categories
+    def set_active_categories(self, categories) -> None:
+        if isinstance(categories, dict):
+            # If a dictionary from EgoSelectorWorker is passed, extract the categories list
+            self._active_categories = categories.get("categories", [])
+        else:
+            self._active_categories = categories
         # Optionally save here, but maybe not needed for every turn if it's transient
         if self._path is None: return
         temp = self._path.with_suffix(".tmp")
@@ -310,10 +355,26 @@ class EgoManager:
         os.replace(temp, self._path)
 
     def get_categories(self) -> dict:
+        if not isinstance(self._categories, dict):
+            return {}
         return self._categories
         
     def get_active_categories(self) -> list[str]:
         return self._active_categories
+
+    def get_rules(self) -> list[str]:
+        rules_list = []
+        if not isinstance(self._categories, dict):
+            return []
+        for cat, rules in self._categories.items():
+            if not isinstance(rules, list):
+                continue
+            for r in rules:
+                if isinstance(r, dict):
+                    texte = r.get("texte", "")
+                    if texte:
+                        rules_list.append(f"[{cat}] {texte}")
+        return rules_list
 
     def get_injection_block(self, is_first: bool = False) -> str:
         if not self._categories: return ""
