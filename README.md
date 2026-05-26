@@ -1,5 +1,9 @@
 # EUGENIA
 
+<p align="center">
+  <img src="assets/logo.png" alt="EUGENIA Logo" width="200"/>
+</p>
+
 *Read this in [Français](README_fr.md)*
 
 **EUGENIA** is an advanced, memory-augmented AI writing assistant designed specifically for novelists, authors, and creators. Far more than a simple text editor, EUGENIA is engineered as a cognitive companion that adapts to your creative voice, remembers your lore, and integrates seamlessly with your existing writing tools.
@@ -17,10 +21,14 @@ EUGENIA separates knowledge into two distinct cognitive hemispheres to ensure sh
 The **Ego Manager** acts as the AI's internal behavioral filter. Instead of relying on static system prompts, EUGENIA dynamically compiles a set of behavioral rules based on your ongoing interactions. She adapts her tone, suggestions, and critique styles to match your creative needs.
 
 ### 3. Native Third-Party Companion Integration
-While EUGENIA includes its own editing environment, it is designed to run alongside and augment your favorite writing software (e.g., **Scrivener, MS Word, Google Docs, or text editors**):
+While EUGENIA includes its own editing environment, it is designed to run alongside, attach to, and augment your favorite third-party software—including web browsers like **Chrome** and **Firefox**, word processors like **Microsoft Word**, **LibreOffice**, **Scrivener**, or **Google Docs**, and text or code editors:
 * **OCR & Graphic Screen Capture:** Instantly grab screenshots of your active writing software to let EUGENIA analyze your current paragraphs.
 * **Active Window Monitoring & Overlay:** Hook into other application windows to read text, annotate, or provide overlays directly on top of your workspace.
 * **Smart Clipboard Tracking:** Read and update your system clipboard to speed up copy-paste iteration loops.
+
+<p align="center">
+  <img src="assets/capture.png" alt="EUGENIA Interface and Companion Overlay" width="800"/>
+</p>
 
 ### 4. Semantic Text Chunking & Bibles
 To handle massive manuscript lengths without exceeding LLM context windows:

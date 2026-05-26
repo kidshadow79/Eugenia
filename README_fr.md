@@ -1,5 +1,9 @@
 # EUGENIA
 
+<p align="center">
+  <img src="assets/logo.png" alt="Logo EUGENIA" width="200"/>
+</p>
+
 *Lire ce document en [English](README.md)*
 
 **EUGENIA** est un assistant d'écriture IA avancé et doté d'une mémoire cognitive profonde, conçu spécifiquement pour les romanciers, auteurs et créateurs. Bien plus qu'un simple éditeur de texte, EUGENIA est conçu comme un compagnon cognitif qui s'adapte à votre voix créative, mémorise l'univers de votre récit (lore) et s'intègre harmonieusement avec vos outils d'écriture existants.
@@ -17,10 +21,14 @@ EUGENIA sépare les connaissances en deux hémisphères distincts pour s'assurer
 L'**Ego Manager** agit comme le filtre comportemental de l'IA. Au lieu d'utiliser des instructions système figées (system prompts), EUGENIA compile de manière dynamique un ensemble de règles comportementales issues de vos échanges. Elle adapte ainsi son ton, ses critiques et ses suggestions à votre démarche artistique personnelle.
 
 ### 3. Compagnon pour Applications Tierces (Intégration Native)
-Bien qu'EUGENIA dispose de sa propre interface d'édition, l'application est conçue pour tourner en tâche de fond et venir se greffer sur vos logiciels de traitement de texte favoris (comme **Scrivener, MS Word, Google Docs ou des éditeurs de code**) :
+Bien qu'EUGENIA dispose de sa propre interface d'édition, l'application est conçue pour tourner en tâche de fond, s'accrocher et venir se greffer sur vos logiciels tiers favoris — y compris les navigateurs web comme **Chrome** et **Firefox**, les traitements de texte comme **Microsoft Word**, **LibreOffice**, **Scrivener**, ou **Google Docs**, ainsi que les éditeurs de texte ou de code :
 * **Capture d'Écran Graphique & OCR :** Capturez instantanément une zone de votre logiciel d'écriture tiers pour qu'EUGENIA lise et analyse le paragraphe en cours grâce à un puissant moteur OCR.
 * **Superposition et Analyse de Fenêtre Active :** Capable de s'accrocher à une autre fenêtre de travail pour lire le texte à la volée, l'annoter ou afficher des bulles d'aide directement au-dessus de votre traitement de texte.
 * **Gestion Avancée du Presse-papiers :** Analyse et modifie le presse-papiers système en temps réel pour fluidifier les itérations de copier-coller.
+
+<p align="center">
+  <img src="assets/capture.png" alt="Interface EUGENIA et Superposition Compagnon" width="800"/>
+</p>
 
 ### 4. Chunking Sémantique & Bibles
 Pour gérer des manuscrits de centaines de milliers de mots sans dépasser les limites de contexte des modèles d'IA :
