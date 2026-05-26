@@ -27,7 +27,15 @@ Bien qu'EUGENIA dispose de sa propre interface d'édition, l'application est con
 * **Gestion Avancée du Presse-papiers :** Analyse et modifie le presse-papiers système en temps réel pour fluidifier les itérations de copier-coller.
 
 <p align="center">
-  <img src="assets/capture.png" alt="Interface EUGENIA et Superposition Compagnon" width="800"/>
+  <img src="assets/capture.png" alt="Interface Principale d'EUGENIA" width="800"/>
+  <br/>
+  <em>Interface Principale d'EUGENIA</em>
+</p>
+
+<p align="center">
+  <img src="assets/capture_firefox.png" alt="Superposition Compagnon EUGENIA (Intégration Firefox)" width="800"/>
+  <br/>
+  <em>Superposition Compagnon d'EUGENIA greffée sur Firefox</em>
 </p>
 
 ### 4. Chunking Sémantique & Bibles

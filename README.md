@@ -27,7 +27,15 @@ While EUGENIA includes its own editing environment, it is designed to run alongs
 * **Smart Clipboard Tracking:** Read and update your system clipboard to speed up copy-paste iteration loops.
 
 <p align="center">
-  <img src="assets/capture.png" alt="EUGENIA Interface and Companion Overlay" width="800"/>
+  <img src="assets/capture.png" alt="EUGENIA Main Interface" width="800"/>
+  <br/>
+  <em>EUGENIA Main Interface</em>
+</p>
+
+<p align="center">
+  <img src="assets/capture_firefox.png" alt="EUGENIA Companion Overlay (Firefox Integration)" width="800"/>
+  <br/>
+  <em>EUGENIA Companion Overlay attached to Firefox</em>
 </p>
 
 ### 4. Semantic Text Chunking & Bibles
