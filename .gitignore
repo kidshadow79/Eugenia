@@ -2,6 +2,8 @@
 data/config/app_config.json
 
 # ─── Données utilisateur locales (non versionnées) ───────────────────────────
+data/authors/
+data/projects/
 data/bible/
 data/relational/
 data/vectors/
