@@ -16,6 +16,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 
+from core.i18n import tr
+
 logger = logging.getLogger(__name__)
 
 # Classes de fenetres Win32 des editeurs connus
@@ -80,8 +82,8 @@ class EditorZone(QWidget):
         ph_layout = QVBoxLayout(self._placeholder)
 
         self._status_label = QLabel(
-            "Aucun editeur attache\n\n"
-            "Utilisez le bouton en bas du panneau EUGENIA"
+            tr("Aucun editeur attache\n\n"
+               "Utilisez le bouton en bas du panneau EUGENIA")
         )
         self._status_label.setObjectName("Placeholder")
         self._status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -123,9 +125,9 @@ class EditorZone(QWidget):
 
         if not candidates:
             self._status_label.setText(
-                "Aucun editeur detecte.\n\n"
-                "Ouvrez Word, LibreOffice Writer, Chrome, Firefox…\n"
-                "puis cliquez sur 'Attacher'."
+                tr("Aucun editeur detecte.\n\n"
+                   "Ouvrez Word, LibreOffice Writer, Chrome, Firefox…\n"
+                   "puis cliquez sur 'Attacher'.")
             )
             return
 
@@ -143,12 +145,12 @@ class EditorZone(QWidget):
     def _pick_window_dialog(self, candidates: list[tuple[int, str, str]]) -> int | None:
         """Ouvre un dialog listant les fenetres candidates groupees, retourne le hwnd choisi."""
         dlg = QDialog(self)
-        dlg.setWindowTitle("Choisir une fenetre")
+        dlg.setWindowTitle(tr("Choisir une fenetre"))
         dlg.setMinimumWidth(450)
         dlg.setMinimumHeight(350)
 
         layout = QVBoxLayout(dlg)
-        layout.addWidget(QLabel("Plusieurs fenetres detectees. Laquelle embarquer ?"))
+        layout.addWidget(QLabel(tr("Plusieurs fenetres detectees. Laquelle embarquer ?")))
 
         from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
         from collections import defaultdict
@@ -171,7 +173,7 @@ class EditorZone(QWidget):
                 tree.addTopLevelItem(item)
             else:
                 # Plusieurs fenetres -> dossier deroulant
-                parent = QTreeWidgetItem([f"{app_name} ({len(windows)} fenetres)"])
+                parent = QTreeWidgetItem([tr("{} ({} fenetres)").format(app_name, len(windows))])
                 parent.setFlags(parent.flags() & ~Qt.ItemFlag.ItemIsSelectable)
                 for hwnd, title in windows:
                     child = QTreeWidgetItem([title])
@@ -275,7 +277,7 @@ class EditorZone(QWidget):
 
         except Exception as exc:
             logger.error("EditorZone._embed — echec : %s", exc)
-            self._status_label.setText(f"Echec de l'embed :\n{exc}")
+            self._status_label.setText(tr("Echec de l'embed :\n{}").format(exc))
 
     def detach_editor(self):
         """Restaure la fenetre embarquee comme fenetre independante."""
@@ -318,8 +320,8 @@ class EditorZone(QWidget):
             self._embedded_hwnd = None
             self._placeholder.setVisible(True)
             self._status_label.setText(
-                "Editeur detache.\n\n"
-                "Utilisez le bouton en bas du panneau EUGENIA pour recapturer."
+                tr("Editeur detache.\n\n"
+                   "Utilisez le bouton en bas du panneau EUGENIA pour recapturer.")
             )
             self.editor_detached.emit()
             self.hwnd_changed.emit(None)

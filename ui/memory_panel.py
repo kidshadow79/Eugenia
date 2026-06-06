@@ -23,6 +23,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 import qtawesome as qta
 
 from core.relational_db import RelationalDB
+from core.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class _MemoryCard(QFrame):
         btn_edit = QPushButton("...")
         btn_edit.setObjectName("MemoryEditBtn")
         btn_edit.setFixedWidth(28)
-        btn_edit.setToolTip("Modifier")
+        btn_edit.setToolTip(tr("Modifier"))
         btn_edit.clicked.connect(lambda: self.edit_requested.emit(
             self._id, self._content_lbl.text()
         ))
@@ -91,7 +92,7 @@ class _MemoryCard(QFrame):
         btn_del = QPushButton("x")
         btn_del.setObjectName("MemoryDeleteBtn")
         btn_del.setFixedWidth(28)
-        btn_del.setToolTip("Supprimer")
+        btn_del.setToolTip(tr("Supprimer"))
         btn_del.clicked.connect(lambda: self.delete_requested.emit(self._id))
         layout.addWidget(btn_del)
 
@@ -128,7 +129,7 @@ class _MemoryTab(QWidget):
         scroll.setWidget(self._container)
         outer.addWidget(scroll)
 
-        self._empty_lbl = QLabel("Aucune entree.")
+        self._empty_lbl = QLabel(tr("Aucune entrée."))
         self._empty_lbl.setObjectName("MemoryEmpty")
         self._empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         outer.addWidget(self._empty_lbl)
@@ -161,7 +162,7 @@ class _MemoryTab(QWidget):
             
         self._category_items[cat_name] = []
         
-        cat_widget = QPushButton(f"  {cat_name.upper()}")
+        cat_widget = QPushButton(f"  {tr(cat_name).upper()}")
         cat_widget.setStyleSheet("QPushButton { background-color: #2b2b2b; color: #00d2ff; padding: 8px; font-weight: bold; border-radius: 4px; text-align: left; border: none; margin-top: 8px; } QPushButton:hover { background-color: #3b3b3b; }")
         cat_widget.setMinimumHeight(40)
         cat_widget.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -217,7 +218,7 @@ class _RelationalTab(_MemoryTab):
             grouped[cat].append(n)
             
         for cat, group_notes in grouped.items():
-            badge = _CATEGORY_LABELS.get(cat, cat.capitalize())
+            badge = tr(_CATEGORY_LABELS.get(cat, cat.capitalize()))
             self._add_category_header(badge)
             for n in group_notes:
                 self._add_card(n["id"], "note", badge, n["content"], category=badge)
@@ -230,7 +231,7 @@ class _RelationalTab(_MemoryTab):
             grouped_entities[etype].append(e)
             
         for etype, group_entities in grouped_entities.items():
-            badge = _ENTITY_LABELS.get(etype, etype.capitalize())
+            badge = tr(_ENTITY_LABELS.get(etype, etype.capitalize()))
             self._add_category_header(badge)
             for e in group_entities:
                 content = f"<b>{e['label']}</b> : {e['content']}"
@@ -239,7 +240,7 @@ class _RelationalTab(_MemoryTab):
     def _on_edit(self, entry_id: int, type_flag: str, current_text: str):
         if self._db is None: return
         new_text, ok = QInputDialog.getMultiLineText(
-            self, "Modifier la memoire", "Contenu :", current_text
+            self, tr("Modifier la mémoire"), tr("Contenu :"), current_text
         )
         if ok and new_text.strip():
             conn = self._db._get_conn()
@@ -261,7 +262,7 @@ class _RelationalTab(_MemoryTab):
     def _on_delete(self, entry_id: int, type_flag: str):
         if self._db is None: return
         ans = QMessageBox.question(
-            self, "Supprimer", "Retirer cette entree de la memoire ?"
+            self, tr("Supprimer"), tr("Retirer cette entrée de la mémoire ?")
         )
         if ans == QMessageBox.StandardButton.Yes:
             conn = self._db._get_conn()
@@ -275,22 +276,22 @@ class _RelationalTab(_MemoryTab):
 class _EgoEditDialog(QDialog):
     def __init__(self, rule_data, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(f"Modifier la regle ({rule_data.get('categorie', 'Ego')})")
+        self.setWindowTitle(tr("Modifier la règle ({})").format(tr(rule_data.get('categorie', 'Ego'))))
         self.resize(400, 300)
         
         layout = QFormLayout(self)
         
         self.texte_edit = QTextEdit(rule_data.get("texte", ""))
-        layout.addRow("Regle :", self.texte_edit)
+        layout.addRow(tr("Règle :"), self.texte_edit)
         
         self.force_spin = QSpinBox()
         self.force_spin.setRange(1, 5)
         self.force_spin.setValue(rule_data.get("force", 3))
-        layout.addRow("Force (1-5) :", self.force_spin)
+        layout.addRow(tr("Force (1-5) :"), self.force_spin)
         
         self.actif_check = QCheckBox()
         self.actif_check.setChecked(rule_data.get("actif", True))
-        layout.addRow("Actif :", self.actif_check)
+        layout.addRow(tr("Actif :"), self.actif_check)
         
         btn_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         btn_box.accepted.connect(self.accept)
@@ -346,7 +347,7 @@ class _EgoTab(QWidget):
                 self._category_expanded[cat_name] = True
                 
             cat_item = QListWidgetItem(self.list_widget)
-            cat_widget = QPushButton(f"🗂 CATÉGORIE : {cat_name.upper()}")
+            cat_widget = QPushButton(tr("🗂 CATÉGORIE : {}").format(tr(cat_name).upper()))
             cat_widget.setStyleSheet("QPushButton { background-color: #2b2b2b; color: #00d2ff; padding: 8px; font-weight: bold; border-radius: 4px; text-align: left; border: none; } QPushButton:hover { background-color: #3b3b3b; }")
             cat_widget.setMinimumHeight(35)
             cat_widget.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -370,11 +371,11 @@ class _EgoTab(QWidget):
                 check.stateChanged.connect(lambda state, c=cat_name, idx=i: self._on_toggle_active(c, idx, state))
                 h_layout.addWidget(check)
                 
-                force_lbl = QLabel(f"[F:{rule.get('force', 3)}]")
+                force_lbl = QLabel(tr("[F:{}]").format(rule.get('force', 3)))
                 force_lbl.setStyleSheet("color: #888;")
                 h_layout.addWidget(force_lbl)
                 
-                lbl = QLabel(f"<b>[{cat_name}]</b> {rule.get('texte', '')}")
+                lbl = QLabel(f"<b>[{tr(cat_name)}]</b> {rule.get('texte', '')}")
                 lbl.setWordWrap(True)
                 lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
                 if not rule.get("actif", True):
@@ -383,13 +384,13 @@ class _EgoTab(QWidget):
                 
                 edit_btn = QPushButton("E")
                 edit_btn.setFixedWidth(28)
-                edit_btn.setToolTip("Editer la regle")
+                edit_btn.setToolTip(tr("Éditer la règle"))
                 edit_btn.clicked.connect(lambda checked, c=cat_name, idx=i, r=rule: self._on_edit(c, idx, r))
                 h_layout.addWidget(edit_btn)
 
                 del_btn = QPushButton("x")
                 del_btn.setFixedWidth(28)
-                del_btn.setToolTip("Supprimer la regle")
+                del_btn.setToolTip(tr("Supprimer la règle"))
                 del_btn.clicked.connect(lambda checked, c=cat_name, idx=i: self._on_delete(c, idx))
                 h_layout.addWidget(del_btn)
                 
@@ -460,22 +461,22 @@ class MemoryPanel(QWidget):
         bar_layout.setContentsMargins(8, 6, 8, 6)
         bar_layout.setSpacing(6)
 
-        lbl = QLabel("Memoire de l'auteur")
+        lbl = QLabel(tr("Memoire de l'auteur"))
         lbl.setObjectName("MemoryBarTitle")
         bar_layout.addWidget(lbl)
         bar_layout.addStretch()
 
-        refresh_btn = QPushButton("Actualiser")
+        refresh_btn = QPushButton(tr("Actualiser"))
         refresh_btn.setObjectName("MemoryRefreshBtn")
         refresh_btn.clicked.connect(self.refresh)
         bar_layout.addWidget(refresh_btn)
 
-        self._scan_btn = QPushButton("Analyser")
+        self._scan_btn = QPushButton(tr("Analyser"))
         self._scan_btn.setIcon(qta.icon("fa5s.search", color="white"))
         self._scan_btn.setObjectName("MemoryScanBtn")
         self._scan_btn.setToolTip(
-            "Scanne toutes les conversations non encore analysées\n"
-            "et extrait de nouveaux éléments pour la mémoire relationnelle"
+            tr("Scanne toutes les conversations non encore analysées\n"
+            "et extrait de nouveaux éléments pour la mémoire relationnelle")
         )
         self._scan_btn.clicked.connect(self._on_scan_clicked)
         bar_layout.addWidget(self._scan_btn)
@@ -491,9 +492,9 @@ class MemoryPanel(QWidget):
         
         self._ego_tab      = _EgoTab()
 
-        self._tabs.addTab(self._relational_tab, "Relationnel")
+        self._tabs.addTab(self._relational_tab, tr("Relationnel"))
         
-        self._tabs.addTab(self._ego_tab,      "Ego")
+        self._tabs.addTab(self._ego_tab,      tr("Ego"))
 
     def set_ego(self, ego) -> None:
         self._ego_tab.set_ego(ego)
@@ -516,7 +517,7 @@ class MemoryPanel(QWidget):
     def set_scanning(self, scanning: bool) -> None:
         """Appele par MainWindow pour griser le bouton pendant un scan en cours."""
         self._scan_btn.setEnabled(not scanning)
-        self._scan_btn.setText("Analyse en cours…" if scanning else "Analyser")
+        self._scan_btn.setText(tr("Analyse en cours…") if scanning else tr("Analyser"))
 
     def _on_scan_clicked(self) -> None:
         self.set_scanning(True)

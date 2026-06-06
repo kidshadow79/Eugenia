@@ -20,6 +20,7 @@ from PyQt6.QtCore import Qt, QSettings, QSize, pyqtSignal
 from PyQt6.QtGui import QKeyEvent, QFont, QPainter, QTextBlockFormat, QTextCursor
 import qtawesome as qta
 from ui.font_config import FontConfig
+from core.i18n import tr
 
 
 def _apply_chat_line_height(chat: "QTextEdit", lh: float) -> None:
@@ -293,10 +294,10 @@ class AIPanel(QWidget):
         self.chat_history = QTextEdit()
         self.chat_history.setObjectName("ChatHistory")
         self.chat_history.setReadOnly(True)
-        self.chat_history.setPlaceholderText("La conversation apparaîtra ici…")
+        self.chat_history.setPlaceholderText(tr("La conversation apparaîtra ici…"))
         top_layout.addWidget(self.chat_history)
 
-        self._thinking_label = QLabel("EUGENIA réfléchit…")
+        self._thinking_label = QLabel(tr("EUGENIA réfléchit…"))
         self._thinking_label.setObjectName("ThinkingLabel")
         self._thinking_label.hide()
         top_layout.addWidget(self._thinking_label)
@@ -311,7 +312,7 @@ class AIPanel(QWidget):
 
         self.chat_input = _ChatInput(on_send=self._on_send)
         self.chat_input.setObjectName("ChatInput")
-        self.chat_input.setPlaceholderText("Écris ton message… (Entrée pour envoyer, Maj+Entrée pour sauter une ligne)")
+        self.chat_input.setPlaceholderText(tr("Écris ton message… (Entrée pour envoyer, Maj+Entrée pour sauter une ligne)"))
         input_layout.addWidget(self.chat_input)
 
         # ── Pill d'attachement (caché par défaut) ────────────────────────────
@@ -330,8 +331,8 @@ class AIPanel(QWidget):
         self._pill_persist_check.setIcon(qta.icon("fa5s.thumbtack", color="#555555", color_active="#ccaa55"))
         self._pill_persist_check.setIconSize(QSize(13, 13))
         self._pill_persist_check.setToolTip(
-            "Conserver dans le contexte après envoi\n"
-            "et sauvegarder dans snapshots/"
+            tr("Conserver dans le contexte après envoi\n"
+               "et sauvegarder dans snapshots/")
         )
         self._pill_persist_check.setCursor(Qt.CursorShape.PointingHandCursor)
         self._pill_persist_check.toggled.connect(self._on_pill_persist_changed)
@@ -340,7 +341,7 @@ class AIPanel(QWidget):
         self._pill_close_btn.setObjectName("PillClose")
         self._pill_close_btn.setIcon(qta.icon("fa5s.times", color="#777777"))
         self._pill_close_btn.setIconSize(QSize(12, 12))
-        self._pill_close_btn.setToolTip("Retirer la pièce jointe")
+        self._pill_close_btn.setToolTip(tr("Retirer la pièce jointe"))
         self._pill_close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._pill_close_btn.clicked.connect(self._on_detach)
         pill_layout.addWidget(self._pill_close_btn)
@@ -355,7 +356,7 @@ class AIPanel(QWidget):
         self._attach_btn.setObjectName("AttachBtn")
         self._attach_btn.setIcon(qta.icon("fa5s.paperclip", color="#858585", color_disabled="#444444"))
         self._attach_btn.setIconSize(QSize(16, 16))
-        self._attach_btn.setToolTip("Joindre un fichier texte ou image à ce message")
+        self._attach_btn.setToolTip(tr("Joindre un fichier texte ou image à ce message"))
         self._attach_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._attach_btn.clicked.connect(self._on_attach_clicked)
         bottom_row.addWidget(self._attach_btn)
@@ -366,8 +367,8 @@ class AIPanel(QWidget):
         self._ghost_scan_btn.setIcon(qta.icon("fa5s.search", color="#858585", color_disabled="#444444"))
         self._ghost_scan_btn.setIconSize(QSize(16, 16))
         self._ghost_scan_btn.setToolTip(
-            "Scanner la page pour ancrer les annotations Ghost Writer\n"
-            "sur les passages correspondants dans l'éditeur."
+            tr("Scanner la page pour ancrer les annotations Ghost Writer\n"
+               "sur les passages correspondants dans l'éditeur.")
         )
         self._ghost_scan_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._ghost_scan_btn.clicked.connect(self._on_ghost_scan_clicked)
@@ -378,7 +379,7 @@ class AIPanel(QWidget):
         self._ghost_hide_btn.setIcon(qta.icon("fa5s.eye", color="#858585", color_disabled="#444444"))
         self._ghost_hide_btn.setIconSize(QSize(16, 16))
         self._ghost_hide_btn.setToolTip(
-            "Afficher / masquer les annotations Ghost Writer."
+            tr("Afficher / masquer les annotations Ghost Writer.")
         )
         self._ghost_hide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._ghost_hide_btn.clicked.connect(self._on_ghost_hide_clicked)
@@ -389,7 +390,7 @@ class AIPanel(QWidget):
         self._edit_doc_btn.setObjectName("EditDocBtn")
         self._edit_doc_btn.setIcon(qta.icon("fa5s.pen", color="#858585"))
         self._edit_doc_btn.setIconSize(QSize(15, 15))
-        self._edit_doc_btn.setToolTip("Ouvrir un nouveau document en mode edition co-auteur")
+        self._edit_doc_btn.setToolTip(tr("Ouvrir un nouveau document en mode edition co-auteur"))
         self._edit_doc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._edit_doc_btn.clicked.connect(self.edit_requested)
         bottom_row.addWidget(self._edit_doc_btn)
@@ -401,14 +402,14 @@ class AIPanel(QWidget):
         self._screenshot_btn.setIcon(qta.icon("fa5s.camera", color="#858585", color_disabled="#444444"))
         self._screenshot_btn.setIconSize(QSize(16, 16))
         self._screenshot_btn.setToolTip(
-            "Capturer la zone éditeur et l'joindre au prochain message."
+            tr("Capturer la zone éditeur et l'joindre au prochain message.")
         )
         self._screenshot_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._screenshot_btn.setEnabled(False)  # activé quand un éditeur est attaché
         self._screenshot_btn.clicked.connect(self.screenshot_requested)
         bottom_row.addWidget(self._screenshot_btn)
 
-        self._send_btn = QPushButton("Envoyer")
+        self._send_btn = QPushButton(tr("Envoyer"))
         self._send_btn.setObjectName("SendButton")
         self._send_btn.clicked.connect(self._on_send)
         self._send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -434,19 +435,19 @@ class AIPanel(QWidget):
         self._embed_btn.setObjectName("EmbedBtn")
         self._embed_btn.setIcon(qta.icon("fa5s.plug", color="#777777"))
         self._embed_btn.setIconSize(QSize(14, 14))
-        self._embed_btn.setToolTip("Attacher l'editeur de texte externe (Word, etc.)")
+        self._embed_btn.setToolTip(tr("Attacher l'editeur de texte externe (Word, etc.)"))
         self._embed_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._embed_btn.clicked.connect(self._on_embed_clicked)
         self._is_attached = False
         footer_layout.addWidget(self._embed_btn)
 
-        self._insert_btn = QPushButton("Insérer")
+        self._insert_btn = QPushButton(tr("Insérer"))
         self._insert_btn.setObjectName("InsertBtn")
         self._insert_btn.setIcon(qta.icon("fa5s.arrow-down", color="#858585"))
         self._insert_btn.setIconSize(QSize(13, 13))
         self._insert_btn.setToolTip(
-            "Insère la dernière réponse EUGENIA dans l'éditeur attaché.\n"
-            "Si du texte est sélectionné dans l'éditeur, il sera remplacé."
+            tr("Insère la dernière réponse EUGENIA dans l'éditeur attaché.\n"
+               "Si du texte est sélectionné dans l'éditeur, il sera remplacé.")
         )
         self._insert_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._insert_btn.setVisible(False)
@@ -464,9 +465,9 @@ class AIPanel(QWidget):
         self._doc_mode_btn.setIcon(qta.icon("fa5s.file-alt", color="#777777"))
         self._doc_mode_btn.setIconSize(QSize(14, 14))
         self._doc_mode_btn.setToolTip(
-            "Mode document :\n"
-            "- Le contenu de l'editeur est lu et injecte dans chaque message\n"
-            "- Les reponses EUGENIA sont automatiquement proposees pour insertion"
+            tr("Mode document :\n"
+               "- Le contenu de l'editeur est lu et injecte dans chaque message\n"
+               "- Les reponses EUGENIA sont automatiquement proposees pour insertion")
         )
         self._doc_mode_btn.setEnabled(False)
         self._doc_mode_btn.toggled.connect(self.document_mode_changed)
@@ -511,12 +512,12 @@ class AIPanel(QWidget):
         self._is_attached = attached
         if attached:
             self._embed_btn.setIcon(qta.icon("fa5s.unlink", color="#d4a657"))
-            self._embed_btn.setToolTip("Detacher l'editeur externe")
+            self._embed_btn.setToolTip(tr("Detacher l'editeur externe"))
             self._doc_mode_btn.setEnabled(True)
             self._screenshot_btn.setEnabled(True)
         else:
             self._embed_btn.setIcon(qta.icon("fa5s.plug", color="#777777"))
-            self._embed_btn.setToolTip("Attacher l'editeur de texte externe (Word, etc.)")
+            self._embed_btn.setToolTip(tr("Attacher l'editeur de texte externe (Word, etc.)"))
             self._doc_mode_btn.setEnabled(False)
             self._doc_mode_btn.setChecked(False)
             self._screenshot_btn.setEnabled(False)
@@ -529,19 +530,19 @@ class AIPanel(QWidget):
         """Ouvre un sélecteur de fichier et attache le résultat."""
         from core.file_reader import read_file_for_context
         ext_filter = (
-            "Fichiers supportés (*.txt *.md *.py *.json *.docx "
-            "*.js *.ts *.html *.css *.xml *.csv *.log *.sql "
-            "*.jpg *.jpeg *.png *.webp *.gif);;"
-            "Texte (*.txt *.md *.py *.json *.docx);;"
-            "Image (*.jpg *.jpeg *.png *.webp *.gif);;"
-            "Tous les fichiers (*)"
+            tr("Fichiers supportés (*.txt *.md *.py *.json *.docx "
+               "*.js *.ts *.html *.css *.xml *.csv *.log *.sql "
+               "*.jpg *.jpeg *.png *.webp *.gif);;") +
+            tr("Texte (*.txt *.md *.py *.json *.docx);;") +
+            tr("Image (*.jpg *.jpeg *.png *.webp *.gif);;") +
+            tr("Tous les fichiers (*)")
         )
-        path, _ = QFileDialog.getOpenFileName(self, "Joindre un fichier", "", ext_filter)
+        path, _ = QFileDialog.getOpenFileName(self, tr("Joindre un fichier"), "", ext_filter)
         if not path:
             return
         file_data = read_file_for_context(path)
         if file_data is None:
-            self.append_injected("Erreur", "Impossible de lire ce fichier (type non supporté ou vide).")
+            self.append_injected(tr("Erreur"), tr("Impossible de lire ce fichier (type non supporté ou vide)."))
             return
         self._pill_persist_check.setChecked(False)
         self._attached_file = file_data
@@ -631,7 +632,7 @@ class AIPanel(QWidget):
             # Émettre le signal — main_window orchestre Archiviste + engine.send()
             self.send_requested.emit(text)
         else:
-            self._append_ai("⚙️  Aucun moteur IA configuré. Va dans Paramètres → IA pour renseigner ta clé API.")
+            self._append_ai(tr("⚙️  Aucun moteur IA configuré. Va dans Paramètres → IA pour renseigner ta clé API."))
             self._set_busy(False)
 
     def on_ai_response(self, text: str):
@@ -643,7 +644,7 @@ class AIPanel(QWidget):
 
     def on_ai_error(self, error: str):
         """Appelé par MainWindow en cas d'erreur API."""
-        self._append_ai(f"❌ Erreur : {error}")
+        self._append_ai(tr("❌ Erreur : {}").format(error))
         self._set_busy(False)
 
     def append_injected(self, label: str, preview: str):
@@ -653,7 +654,7 @@ class AIPanel(QWidget):
         """
         self.chat_history.append(
             f'<p style="color:#555555;font-size:11px;font-style:italic;">'
-            f'📎 {label} injecté dans la conversation<br>'
+            + tr("📎 {} injecté dans la conversation").format(tr(label)) + f'<br>'
             f'<span style="color:#444444;">{preview[:80]}{"…" if len(preview) > 80 else ""}</span>'
             f'</p>'
         )
@@ -666,7 +667,7 @@ class AIPanel(QWidget):
     def _append_user(self, text: str):
         safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
         self.chat_history.append(
-            f'<p><span style="color:#569cd6;font-weight:bold;">Toi</span><br>{safe}</p>'
+            f'<p><span style="color:#569cd6;font-weight:bold;">' + tr("Toi") + f'</span><br>{safe}</p>'
         )
         _apply_chat_line_height(self.chat_history, FontConfig.instance().chat_lh)
         self._scroll_to_bottom()
@@ -674,7 +675,7 @@ class AIPanel(QWidget):
     def _append_ai(self, text: str):
         safe = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
         self.chat_history.append(
-            f'<p><span style="color:#4ec9b0;font-weight:bold;">EUGENIA</span><br>{safe}</p>'
+            f'<p><span style="color:#4ec9b0;font-weight:bold;">' + tr("EUGENIA") + f'</span><br>{safe}</p>'
         )
         _apply_chat_line_height(self.chat_history, FontConfig.instance().chat_lh)
         self._scroll_to_bottom()
@@ -732,9 +733,9 @@ class AIPanel(QWidget):
         """Active ou désactive le bouton Scan selon l'état du système Ghost Writer."""
         self._ghost_scan_btn.setEnabled(active)
         self._ghost_scan_btn.setToolTip(
-            "Scanner la page pour repositionner les annotations."
+            tr("Scanner la page pour repositionner les annotations.")
             if active
-            else "Activer les annotations pour utiliser le scan."
+            else tr("Activer les annotations pour utiliser le scan.")
         )
 
     def _on_ghost_hide_clicked(self) -> None:
@@ -743,9 +744,9 @@ class AIPanel(QWidget):
         icon_name = "fa5s.eye" if self._ghost_annotations_visible else "fa5s.eye-slash"
         self._ghost_hide_btn.setIcon(qta.icon(icon_name, color=clr, color_disabled=clr_dis))
         self._ghost_hide_btn.setToolTip(
-            "Masquer les annotations Ghost Writer."
+            tr("Masquer les annotations Ghost Writer.")
             if self._ghost_annotations_visible
-            else "Afficher les annotations Ghost Writer."
+            else tr("Afficher les annotations Ghost Writer.")
         )
         self.ghost_toggle_requested.emit()
 
@@ -807,7 +808,7 @@ class _VerticalLabel(QWidget):
         super().__init__(parent)
         self._text = text
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Cliquer pour deployer EUGENIA")
+        self.setToolTip(tr("Cliquer pour deployer EUGENIA"))
 
     def paintEvent(self, event):
         painter = QPainter(self)

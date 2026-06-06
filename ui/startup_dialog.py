@@ -19,6 +19,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QIcon
 import core.session_manager as sm
 from ui.title_bar import CustomTitleBar
+from core.i18n import tr, init_i18n, get_current_language
+from core.config_manager import load_config, save_config
 
 DIALOG_STYLE = """
 QDialog {
@@ -138,6 +140,23 @@ QCheckBox::indicator:disabled {
 }
 QCheckBox:disabled { color: #555555; }
 QLabel#CatCounter { font-size: 11px; color: #858585; }
+QPushButton#LangBtn {
+    background-color: #2d2d2d;
+    color: #888888;
+    border: 1px solid #3e3e42;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+}
+QPushButton#LangBtn:hover {
+    background-color: #3e3e42;
+    color: #ffffff;
+}
+QPushButton#LangBtn[active="true"] {
+    background-color: #0e639c;
+    color: #ffffff;
+    border: 1px solid #1177bb;
+}
 """
 
 
@@ -177,7 +196,7 @@ class _CategoryPicker(QWidget):
         grid.setVerticalSpacing(8)
 
         for idx, cat in enumerate(CATEGORY_CATALOG):
-            cb = QCheckBox(cat['label'])
+            cb = QCheckBox(tr(cat['label']))
             cb.setChecked(cat["key"] in DEFAULT_CATEGORIES)
             cb.stateChanged.connect(self._on_state_changed)
             self._checks[cat["key"]] = cb
@@ -185,6 +204,13 @@ class _CategoryPicker(QWidget):
             grid.addWidget(cb, row, col)
 
         layout.addWidget(grid_widget)
+        self._refresh_state()
+
+    def retranslateUi(self) -> None:
+        from core.project_types import CATEGORY_CATALOG
+        for cat in CATEGORY_CATALOG:
+            if cat["key"] in self._checks:
+                self._checks[cat["key"]].setText(tr(cat["label"]))
         self._refresh_state()
 
     # ─── Logique ──────────────────────────────────────────────────────────────
@@ -212,7 +238,7 @@ class _CategoryPicker(QWidget):
         else:
             color = "#858585"
         self._counter_label.setText(
-            f"{n}/{self._max} catégories sélectionnées (min {self._min})"
+            tr("{}/{} catégories sélectionnées (min {})").format(n, self._max, self._min)
         )
         self._counter_label.setStyleSheet(f"font-size: 11px; color: {color};")
         # Désactiver les cases non cochées quand le max est atteint
@@ -232,10 +258,14 @@ class _CategoryPicker(QWidget):
 class StartupDialog(QDialog):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("EUGENIA — Démarrage")
+        # Initialiser la langue avant de créer les widgets
+        init_i18n()
+        
+        self.setWindowTitle(tr("EUGENIA — Démarrage"))
         self.setWindowIcon(QIcon("assets/logo.png"))
         self.setMinimumSize(520, 680)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
+        self.setStyleSheet(DIALOG_STYLE)
 
         self.selected_author: dict | None = None
         self.selected_project: dict | None = None
@@ -250,7 +280,7 @@ class StartupDialog(QDialog):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         
-        self._title_bar = CustomTitleBar("EUGENIA — Démarrage")
+        self._title_bar = CustomTitleBar(tr("EUGENIA — Démarrage"))
         self._title_bar.close_requested.connect(self.reject)
         self._title_bar.minimize_requested.connect(self.showMinimized)
         self._title_bar.btn_maximize.hide() # Désactiver l'agrandissement pour le dialog de démarrage
@@ -262,6 +292,9 @@ class StartupDialog(QDialog):
         content_layout.addWidget(self._stack)
         
         root.addWidget(content_container)
+        
+        # Mettre à jour l'état actif des boutons FR/EN
+        self._update_lang_buttons()
 
     # ------------------------------------------------------------------ #
     # Page 0 — Auteur                                                      #
@@ -273,29 +306,59 @@ class StartupDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
-        title = QLabel("Qui écrit ?")
-        title.setObjectName("PageTitle")
-        layout.addWidget(title)
+        # En-tête avec titre et sélecteur de langue
+        header_layout = QHBoxLayout()
+        self._author_title = QLabel(tr("Qui écrit ?"))
+        self._author_title.setObjectName("PageTitle")
+        header_layout.addWidget(self._author_title)
 
-        subtitle = QLabel("Choisis ton profil ou crée-en un nouveau.")
-        subtitle.setObjectName("PageSubtitle")
-        layout.addWidget(subtitle)
+        header_layout.addStretch()
+
+        # Sélecteur de langue (FR / EN)
+        lang_layout = QHBoxLayout()
+        lang_layout.setSpacing(2)
+
+        self._btn_fr = QPushButton("FR")
+        self._btn_fr.setFixedSize(32, 24)
+        self._btn_fr.setObjectName("LangBtn")
+        self._btn_fr.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_fr.setToolTip(tr("Basculer l'interface en français"))
+        self._btn_fr.clicked.connect(lambda: self._set_language("fr"))
+
+        self._btn_en = QPushButton("EN")
+        self._btn_en.setFixedSize(32, 24)
+        self._btn_en.setObjectName("LangBtn")
+        self._btn_en.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_en.setToolTip(tr("Basculer l'interface en anglais"))
+        self._btn_en.clicked.connect(lambda: self._set_language("en"))
+
+        lang_layout.addWidget(self._btn_fr)
+        lang_layout.addWidget(self._btn_en)
+        header_layout.addLayout(lang_layout)
+        
+        layout.addLayout(header_layout)
+
+        self._author_subtitle = QLabel(tr("Choisis ton profil ou crée-en un nouveau."))
+        self._author_subtitle.setObjectName("PageSubtitle")
+        layout.addWidget(self._author_subtitle)
 
         # Liste des auteurs existants
-        existing_label = QLabel("PROFILS EXISTANTS")
-        existing_label.setObjectName("SectionLabel")
-        layout.addWidget(existing_label)
+        self._author_existing_label = QLabel(tr("PROFILS EXISTANTS"))
+        self._author_existing_label.setObjectName("SectionLabel")
+        layout.addWidget(self._author_existing_label)
 
         self._author_list = QListWidget()
         self._author_list.itemSelectionChanged.connect(self._on_author_selected)
         self._author_list.itemDoubleClicked.connect(lambda: self._go_to_projects())
+        self._author_list.setToolTip(tr("Sélectionnez votre profil d'auteur dans cette liste."))
         self._refresh_author_list()
         layout.addWidget(self._author_list)
 
         # Bouton supprimer auteur
-        self._author_delete_btn = QPushButton("Supprimer ce profil")
+        self._author_delete_btn = QPushButton(tr("Supprimer ce profil"))
         self._author_delete_btn.setObjectName("DeleteBtn")
         self._author_delete_btn.setEnabled(False)
+        self._author_delete_btn.setToolTip(tr("Supprimer définitivement le profil sélectionné et tous ses projets."))
         self._author_delete_btn.clicked.connect(self._delete_author)
         layout.addWidget(self._author_delete_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -303,28 +366,31 @@ class StartupDialog(QDialog):
         sep = QFrame(); sep.setObjectName("Separator")
         layout.addWidget(sep)
 
-        create_label = QLabel("NOUVEAU PROFIL")
-        create_label.setObjectName("SectionLabel")
-        layout.addWidget(create_label)
+        self._author_create_label = QLabel(tr("NOUVEAU PROFIL"))
+        self._author_create_label.setObjectName("SectionLabel")
+        layout.addWidget(self._author_create_label)
 
         name_row = QHBoxLayout()
         self._author_input = QLineEdit()
-        self._author_input.setPlaceholderText("Ton prénom ou pseudonyme…")
+        self._author_input.setPlaceholderText(tr("Ton prénom ou pseudonyme…"))
+        self._author_input.setToolTip(tr("Entrez votre prénom ou votre nom de plume."))
         self._author_input.returnPressed.connect(self._create_author)
         name_row.addWidget(self._author_input)
 
-        create_btn = QPushButton("Créer")
-        create_btn.setObjectName("SecondaryBtn")
-        create_btn.clicked.connect(self._create_author)
-        name_row.addWidget(create_btn)
+        self._author_create_btn = QPushButton(tr("Créer"))
+        self._author_create_btn.setObjectName("SecondaryBtn")
+        self._author_create_btn.setToolTip(tr("Créer le profil d'auteur avec le nom saisi."))
+        self._author_create_btn.clicked.connect(self._create_author)
+        name_row.addWidget(self._author_create_btn)
         layout.addLayout(name_row)
 
         layout.addStretch()
 
         # Bouton continuer
-        self._author_next_btn = QPushButton("Continuer →")
+        self._author_next_btn = QPushButton(tr("Continuer →"))
         self._author_next_btn.setObjectName("PrimaryBtn")
         self._author_next_btn.setEnabled(False)
+        self._author_next_btn.setToolTip(tr("Continuer vers la sélection ou création de projet."))
         self._author_next_btn.clicked.connect(self._go_to_projects)
         layout.addWidget(self._author_next_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -340,7 +406,7 @@ class StartupDialog(QDialog):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
 
-        self._project_title = QLabel("Quel projet ?")
+        self._project_title = QLabel(tr("Quel projet ?"))
         self._project_title.setObjectName("PageTitle")
         layout.addWidget(self._project_title)
 
@@ -348,19 +414,21 @@ class StartupDialog(QDialog):
         self._project_subtitle.setObjectName("PageSubtitle")
         layout.addWidget(self._project_subtitle)
 
-        existing_label = QLabel("PROJETS EXISTANTS")
-        existing_label.setObjectName("SectionLabel")
-        layout.addWidget(existing_label)
+        self._project_existing_label = QLabel(tr("PROJETS EXISTANTS"))
+        self._project_existing_label.setObjectName("SectionLabel")
+        layout.addWidget(self._project_existing_label)
 
         self._project_list = QListWidget()
         self._project_list.itemSelectionChanged.connect(self._on_project_selected)
         self._project_list.itemDoubleClicked.connect(lambda: self._open_project())
+        self._project_list.setToolTip(tr("Sélectionnez le projet d'écriture à ouvrir."))
         layout.addWidget(self._project_list)
 
         # Bouton supprimer projet
-        self._project_delete_btn = QPushButton("Supprimer ce projet")
+        self._project_delete_btn = QPushButton(tr("Supprimer ce projet"))
         self._project_delete_btn.setObjectName("DeleteBtn")
         self._project_delete_btn.setEnabled(False)
+        self._project_delete_btn.setToolTip(tr("Supprimer définitivement le projet sélectionné, sa Bible et ses statistiques."))
         self._project_delete_btn.clicked.connect(self._delete_project)
         layout.addWidget(self._project_delete_btn, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -368,26 +436,29 @@ class StartupDialog(QDialog):
         sep = QFrame(); sep.setObjectName("Separator")
         layout.addWidget(sep)
 
-        create_label = QLabel("NOUVEAU PROJET")
-        create_label.setObjectName("SectionLabel")
-        layout.addWidget(create_label)
+        self._project_create_label = QLabel(tr("NOUVEAU PROJET"))
+        self._project_create_label.setObjectName("SectionLabel")
+        layout.addWidget(self._project_create_label)
 
         name_row = QHBoxLayout()
         self._project_input = QLineEdit()
-        self._project_input.setPlaceholderText("Titre du roman, essai, projet…")
+        self._project_input.setPlaceholderText(tr("Titre du roman, essai, projet…"))
+        self._project_input.setToolTip(tr("Entrez le titre de votre nouveau roman, essai ou document."))
         self._project_input.returnPressed.connect(self._create_project)
         name_row.addWidget(self._project_input)
 
-        self._project_create_btn = QPushButton("Créer")
+        self._project_create_btn = QPushButton(tr("Créer"))
         self._project_create_btn.setObjectName("SecondaryBtn")
+        self._project_create_btn.setToolTip(tr("Créer un nouveau projet d'écriture avec ce titre."))
         self._project_create_btn.clicked.connect(self._create_project)
         name_row.addWidget(self._project_create_btn)
         layout.addLayout(name_row)
 
         # Sélecteur de catégories Bible
-        cat_label = QLabel("CATÉGORIES DE LA BIBLE (min 2, max 5)")
-        cat_label.setObjectName("SectionLabel")
-        layout.addWidget(cat_label)
+        self._project_cat_label = QLabel(tr("CATÉGORIES DE LA BIBLE (min 2, max 5)"))
+        self._project_cat_label.setObjectName("SectionLabel")
+        self._project_cat_label.setToolTip(tr("Choisissez les thèmes et catégories d'informations que l'Archiviste doit suivre pour ce projet."))
+        layout.addWidget(self._project_cat_label)
 
         self._category_picker = _CategoryPicker()
         self._category_picker.validation_changed.connect(
@@ -410,15 +481,17 @@ class StartupDialog(QDialog):
 
         # Boutons navigation
         btn_row = QHBoxLayout()
-        back_btn = QPushButton("← Retour")
-        back_btn.setObjectName("SecondaryBtn")
-        back_btn.clicked.connect(lambda: self._stack.setCurrentIndex(0))
-        btn_row.addWidget(back_btn)
+        self._project_back_btn = QPushButton(tr("← Retour"))
+        self._project_back_btn.setObjectName("SecondaryBtn")
+        self._project_back_btn.setToolTip(tr("Retourner à la sélection d'auteur."))
+        self._project_back_btn.clicked.connect(lambda: self._stack.setCurrentIndex(0))
+        btn_row.addWidget(self._project_back_btn)
 
         btn_row.addStretch()
 
-        self._project_open_btn = QPushButton("Ouvrir EUGENIA →")
+        self._project_open_btn = QPushButton(tr("Ouvrir EUGENIA →"))
         self._project_open_btn.setObjectName("PrimaryBtn")
+        self._project_open_btn.setToolTip(tr("Lancer EUGENIA pour commencer à écrire."))
         self._project_open_btn.setEnabled(False)
         self._project_open_btn.clicked.connect(self._open_project)
         btn_row.addWidget(self._project_open_btn)
@@ -452,7 +525,7 @@ class StartupDialog(QDialog):
         try:
             author = sm.create_author(name)
         except ValueError as e:
-            QMessageBox.warning(self, "Nom déjà utilisé", str(e))
+            QMessageBox.warning(self, tr("Nom déjà utilisé"), str(e))
             return
         self._author_input.clear()
         self._refresh_author_list()
@@ -466,8 +539,8 @@ class StartupDialog(QDialog):
     def _go_to_projects(self):
         if not self.selected_author:
             return
-        self._project_title.setText(f"Quel projet, {self.selected_author['name']} ?")
-        self._project_subtitle.setText("Choisis un projet existant ou crée-en un nouveau.")
+        self._project_title.setText(tr("Quel projet, {} ?").format(self.selected_author['name']))
+        self._project_subtitle.setText(tr("Choisis un projet existant ou crée-en un nouveau."))
         self._refresh_project_list()
         self._stack.setCurrentIndex(1)
 
@@ -500,7 +573,7 @@ class StartupDialog(QDialog):
             project = sm.create_project(name, self.selected_author['uuid'],
                                         categories)
         except ValueError as e:
-            QMessageBox.warning(self, "Nom déjà utilisé", str(e))
+            QMessageBox.warning(self, tr("Nom déjà utilisé"), str(e))
             return
         self._project_input.clear()
         self._refresh_project_list()
@@ -526,10 +599,8 @@ class StartupDialog(QDialog):
             return
         reply = QMessageBox.warning(
             self,
-            "Supprimer le profil",
-            f"Supprimer le profil \u00ab\u00a0{author['name']}\u00a0\u00bb ?\n\n"
-            "Cette action supprimera aussi TOUS ses projets, sa Bible\n"
-            "et sa m\u00e9moire relationnelle.\n\nImpossible d'annuler.",
+            tr("Supprimer le profil"),
+            tr("Supprimer le profil « {} » ?\n\nCette action supprimera aussi TOUS ses projets, sa Bible\net sa mémoire relationnelle.\n\nImpossible d'annuler.").format(author['name']),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
             QMessageBox.StandardButton.Cancel,
         )
@@ -547,10 +618,8 @@ class StartupDialog(QDialog):
             return
         reply = QMessageBox.warning(
             self,
-            "Supprimer le projet",
-            f"Supprimer le projet \u00ab\u00a0{project['name']}\u00a0\u00bb ?\n\n"
-            "La Bible, les chunks et tous les donn\u00e9es du projet\n"
-            "seront supprim\u00e9s d\u00e9finitivement.\n\nImpossible d'annuler.",
+            tr("Supprimer le projet"),
+            tr("Supprimer le projet « {} » ?\n\nLa Bible, les chunks et tous les données du projet\nseront supprimés définitivement.\n\nImpossible d'annuler.").format(project['name']),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
             QMessageBox.StandardButton.Cancel,
         )
@@ -561,3 +630,72 @@ class StartupDialog(QDialog):
         self._project_open_btn.setEnabled(False)
         self._project_delete_btn.setEnabled(False)
         self._refresh_project_list()
+
+    # ------------------------------------------------------------------ #
+    # Traduction / Internationalisation                                    #
+    # ------------------------------------------------------------------ #
+
+    def _set_language(self, lang: str):
+        cfg = load_config()
+        cfg["language"] = lang
+        save_config(cfg)
+        init_i18n(lang)
+        self._update_lang_buttons()
+        self.retranslateUi()
+
+    def _update_lang_buttons(self):
+        current = get_current_language()
+        self._btn_fr.setProperty("active", current == "fr")
+        self._btn_en.setProperty("active", current == "en")
+        self._btn_fr.style().unpolish(self._btn_fr)
+        self._btn_fr.style().polish(self._btn_fr)
+        self._btn_en.style().unpolish(self._btn_en)
+        self._btn_en.style().polish(self._btn_en)
+
+    def retranslateUi(self) -> None:
+        self.setWindowTitle(tr("EUGENIA — Démarrage"))
+        self._title_bar.set_title(tr("EUGENIA — Démarrage"))
+        
+        # Page 0 (Auteur)
+        self._author_title.setText(tr("Qui écrit ?"))
+        self._author_subtitle.setText(tr("Choisis ton profil ou crée-en un nouveau."))
+        self._author_existing_label.setText(tr("PROFILS EXISTANTS"))
+        self._author_delete_btn.setText(tr("Supprimer ce profil"))
+        self._author_create_label.setText(tr("NOUVEAU PROFIL"))
+        self._author_input.setPlaceholderText(tr("Ton prénom ou pseudonyme…"))
+        self._author_create_btn.setText(tr("Créer"))
+        self._author_next_btn.setText(tr("Continuer →"))
+
+        self._btn_fr.setToolTip(tr("Basculer l'interface en français"))
+        self._btn_en.setToolTip(tr("Basculer l'interface en anglais"))
+        self._author_list.setToolTip(tr("Sélectionnez votre profil d'auteur dans cette liste."))
+        self._author_delete_btn.setToolTip(tr("Supprimer définitivement le profil sélectionné et tous ses projets."))
+        self._author_input.setToolTip(tr("Entrez votre prénom ou votre nom de plume."))
+        self._author_create_btn.setToolTip(tr("Créer le profil d'auteur avec le nom saisi."))
+        self._author_next_btn.setToolTip(tr("Continuer vers la sélection ou création de projet."))
+        
+        # Page 1 (Projet)
+        if self.selected_author:
+            self._project_title.setText(tr("Quel projet, {} ?").format(self.selected_author['name']))
+        else:
+            self._project_title.setText(tr("Quel projet ?"))
+        self._project_subtitle.setText(tr("Choisis un projet existant ou crée-en un nouveau."))
+        self._project_existing_label.setText(tr("PROJETS EXISTANTS"))
+        self._project_delete_btn.setText(tr("Supprimer ce projet"))
+        self._project_create_label.setText(tr("NOUVEAU PROJET"))
+        self._project_input.setPlaceholderText(tr("Titre du roman, essai, projet…"))
+        self._project_create_btn.setText(tr("Créer"))
+        self._project_cat_label.setText(tr("CATÉGORIES DE LA BIBLE (min 2, max 5)"))
+        self._project_back_btn.setText(tr("← Retour"))
+        self._project_open_btn.setText(tr("Ouvrir EUGENIA →"))
+
+        self._project_list.setToolTip(tr("Sélectionnez le projet d'écriture à ouvrir."))
+        self._project_delete_btn.setToolTip(tr("Supprimer définitivement le projet sélectionné, sa Bible et ses statistiques."))
+        self._project_input.setToolTip(tr("Entrez le titre de votre nouveau roman, essai ou document."))
+        self._project_create_btn.setToolTip(tr("Créer un nouveau projet d'écriture avec ce titre."))
+        self._project_cat_label.setToolTip(tr("Choisissez les thèmes et catégories d'informations que l'Archiviste doit suivre pour ce projet."))
+        self._project_back_btn.setToolTip(tr("Retourner à la sélection d'auteur."))
+        self._project_open_btn.setToolTip(tr("Lancer EUGENIA pour commencer à écrire."))
+        
+        # Retranslate Category Picker
+        self._category_picker.retranslateUi()

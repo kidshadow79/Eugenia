@@ -19,6 +19,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 
 from core.conversation_store import ConversationStore
 from ui.font_config import FontConfig
+from core.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -74,15 +75,15 @@ class HistoryPanel(QWidget):
         # Bouton Nouvelle conversation (en haut)
         new_row = QHBoxLayout()
         new_row.setContentsMargins(8, 0, 8, 4)
-        self._new_btn = QPushButton("＋  Nouvelle conversation")
+        self._new_btn = QPushButton(tr("＋  Nouvelle conversation"))
         self._new_btn.setObjectName("HistBtnNew")
-        self._new_btn.setToolTip("Sauvegarder la conversation en cours et en démarrer une nouvelle")
+        self._new_btn.setToolTip(tr("Sauvegarder la conversation en cours et en démarrer une nouvelle"))
         self._new_btn.clicked.connect(self._on_new)
         new_row.addWidget(self._new_btn)
         layout.addLayout(new_row)
 
         # Label vide
-        self._empty_label = QLabel("Aucune conversation enregistree.")
+        self._empty_label = QLabel(tr("Aucune conversation enregistree."))
         self._empty_label.setObjectName("EmptyLabel")
         self._empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_label.setWordWrap(True)
@@ -98,28 +99,28 @@ class HistoryPanel(QWidget):
         btn_row.setSpacing(6)
         btn_row.setContentsMargins(8, 4, 8, 8)
 
-        self._view_btn = QPushButton("Voir")
+        self._view_btn = QPushButton(tr("Voir"))
         self._view_btn.setObjectName("HistBtn")
         self._view_btn.setEnabled(False)
         self._view_btn.clicked.connect(self._on_view)
 
-        self._resume_btn = QPushButton("↩ Reprendre")
+        self._resume_btn = QPushButton(tr("↩ Reprendre"))
         self._resume_btn.setObjectName("HistBtn")
         self._resume_btn.setEnabled(False)
-        self._resume_btn.setToolTip("Recharge cette conversation et continue à partir d'où elle s'est arrêtée")
+        self._resume_btn.setToolTip(tr("Recharge cette conversation et continue à partir d'où elle s'est arrêtée"))
         self._resume_btn.clicked.connect(self._on_resume)
 
-        self._del_btn = QPushButton("Supprimer")
+        self._del_btn = QPushButton(tr("Supprimer"))
         self._del_btn.setObjectName("HistBtnDanger")
         self._del_btn.setEnabled(False)
         self._del_btn.clicked.connect(self._on_delete)
 
-        self._scan_btn = QPushButton("🔍 Indexer")
+        self._scan_btn = QPushButton(tr("🔍 Indexer"))
         self._scan_btn.setObjectName("HistBtn")
-        self._scan_btn.setToolTip("Scanner et indexer les anciennes conversations manquantes dans la base sémantique (FAISS).")
+        self._scan_btn.setToolTip(tr("Scanner et indexer les anciennes conversations manquantes dans la base sémantique (FAISS)."))
         self._scan_btn.clicked.connect(self.scan_requested.emit)
 
-        self._rename_btn = QPushButton("Renommer")
+        self._rename_btn = QPushButton(tr("Renommer"))
         self._rename_btn.setObjectName("HistBtn")
         self._rename_btn.setEnabled(False)
         self._rename_btn.clicked.connect(self._on_rename)
@@ -193,9 +194,9 @@ class HistoryPanel(QWidget):
     def _on_new(self):
         reply = QMessageBox.question(
             self,
-            "Nouvelle conversation",
-            "Démarrer une nouvelle conversation ?\n\n"
-            "La conversation en cours sera sauvegardée dans l'historique.",
+            tr("Nouvelle conversation"),
+            tr("Démarrer une nouvelle conversation ?\n\n"
+               "La conversation en cours sera sauvegardée dans l'historique."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -207,10 +208,10 @@ class HistoryPanel(QWidget):
             return
         reply = QMessageBox.question(
             self,
-            "Reprendre la conversation",
-            f"Reprendre la conversation du {sid} ?\n\n"
-            "La conversation en cours sera sauvegardée et l'historique "
-            "de la session sélectionnée sera rechargé.",
+            tr("Reprendre la conversation"),
+            tr("Reprendre la conversation du {} ?\n\n"
+               "La conversation en cours sera sauvegardée et l'historique "
+               "de la session sélectionnée sera rechargé.").format(sid),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -232,8 +233,8 @@ class HistoryPanel(QWidget):
             logging.info(f"[HISTORY] _on_rename session={session_id} title={current_title}")
             from PyQt6.QtWidgets import QLineEdit
             new_title, ok = QInputDialog.getText(
-                self, "Renommer la conversation", 
-                "Nouveau titre (vide pour utiliser la date):",
+                self, tr("Renommer la conversation"), 
+                tr("Nouveau titre (vide pour utiliser la date):"),
                 QLineEdit.EchoMode.Normal,
                 current_title
             )
@@ -250,8 +251,8 @@ class HistoryPanel(QWidget):
             return
         reply = QMessageBox.warning(
             self,
-            "Supprimer la conversation",
-            f"Supprimer definitivement la conversation du {sid} ?",
+            tr("Supprimer la conversation"),
+            tr("Supprimer definitivement la conversation du {} ?").format(sid),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
         )
         if reply != QMessageBox.StandardButton.Yes:
@@ -271,7 +272,7 @@ class HistoryPanel(QWidget):
 class _ViewDialog(QDialog):
     def __init__(self, session_id: str, messages: list[dict], parent=None):
         super().__init__(parent)
-        self.setWindowTitle(f"Conversation — {session_id}")
+        self.setWindowTitle(tr("Conversation — {}").format(session_id))
         self.setMinimumSize(560, 480)
 
         layout = QVBoxLayout(self)
@@ -284,9 +285,9 @@ class _ViewDialog(QDialog):
             content = msg.get("content", "")
             ts = msg.get("ts", "")
             if role == "user":
-                viewer.append(f'<span style="color:#4ec9b0"><b>Vous</b></span> <span style="color:#555;font-size:11px">{ts}</span>')
+                viewer.append(f'<span style="color:#4ec9b0"><b>' + tr("Vous") + f'</b></span> <span style="color:#555;font-size:11px">{ts}</span>')
             else:
-                viewer.append(f'<span style="color:#ce9178"><b>EUGENIA</b></span> <span style="color:#555;font-size:11px">{ts}</span>')
+                viewer.append(f'<span style="color:#ce9178"><b>' + tr("EUGENIA") + f'</b></span> <span style="color:#555;font-size:11px">{ts}</span>')
             viewer.append(f'<p style="margin:2px 0 10px 0">{content}</p>')
         layout.addWidget(viewer)
 

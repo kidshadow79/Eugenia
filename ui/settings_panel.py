@@ -28,6 +28,7 @@ import qtawesome as qta
 
 logger = logging.getLogger(__name__)
 
+from core.i18n import tr
 from core.providers import (
     get_provider_labels, get_chat_models, get_embed_models,
     PROVIDERS, PROVIDER_ORDER,
@@ -48,18 +49,18 @@ from ui.font_config import FONT_FAMILIES
 
 # Zones de couleurs exposables à l'utilisateur (clé palette, libellé)
 _COLOR_ZONES = [
-    ("item_select",  "Sélection"),
-    ("accent",       "Accent / boutons"),
-    ("bg_window",    "Fond principal"),
-    ("bg_panel",     "Fond panneaux"),
-    ("icon_bar_bg",  "Fond barre onglets"),
-    ("text_primary", "Texte principal"),
-    ("icon_color",   "Icônes (barre)"),
-    ("icon_active",  "Icônes actives"),
-    ("notif_bg",     "Notification — fond"),
-    ("notif_text",   "Notification — texte"),
-    ("badge_bg",     "Annotation — fond encadré"),
-    ("badge_text",   "Annotation — texte encadré"),
+    ("item_select",  tr("Sélection")),
+    ("accent",       tr("Accent / boutons")),
+    ("bg_window",    tr("Fond principal")),
+    ("bg_panel",     tr("Fond panneaux")),
+    ("icon_bar_bg",  tr("Fond barre onglets")),
+    ("text_primary", tr("Texte principal")),
+    ("icon_color",   tr("Icônes (barre)")),
+    ("icon_active",  tr("Icônes actives")),
+    ("notif_bg",     tr("Notification — fond")),
+    ("notif_text",   tr("Notification — texte")),
+    ("badge_bg",     tr("Annotation — fond encadré")),
+    ("badge_text",   tr("Annotation — texte encadré")),
 ]
 
 
@@ -81,13 +82,13 @@ class _WebSearchSection(QWidget):
         layout.setContentsMargins(0, 4, 0, 8)
         layout.setSpacing(6)
 
-        title = QLabel("Recherche Web (/web)")
+        title = QLabel(tr("Recherche Web (/web)"))
         title.setObjectName("SectionTitle")
         layout.addWidget(title)
 
         desc = QLabel(
-            "Tapez <code>/web [recherche]</code> dans le chat pour interroger "
-            "le web avant qu'EUGENIA reponde."
+            tr("Tapez <code>/web [recherche]</code> dans le chat pour interroger "
+            "le web avant qu'EUGENIA reponde.")
         )
         desc.setWordWrap(True)
         desc.setObjectName("FieldLabel")
@@ -96,7 +97,7 @@ class _WebSearchSection(QWidget):
         # Provider
         row_prov = QHBoxLayout()
         row_prov.setSpacing(8)
-        lbl_prov = QLabel("Provider")
+        lbl_prov = QLabel(tr("Provider"))
         lbl_prov.setObjectName("FieldLabel")
         row_prov.addWidget(lbl_prov)
         self._combo_provider = QComboBox()
@@ -111,7 +112,7 @@ class _WebSearchSection(QWidget):
         row_key = QHBoxLayout(self._key_widget)
         row_key.setContentsMargins(0, 0, 0, 0)
         row_key.setSpacing(8)
-        lbl_key = QLabel("Cle API")
+        lbl_key = QLabel(tr("Cle API"))
         lbl_key.setObjectName("FieldLabel")
         row_key.addWidget(lbl_key)
         self._key_edit = QLineEdit()
@@ -139,7 +140,7 @@ class _WebSearchSection(QWidget):
         # Max resultats
         row_max = QHBoxLayout()
         row_max.setSpacing(8)
-        lbl_max = QLabel("Resultats max")
+        lbl_max = QLabel(tr("Resultats max"))
         lbl_max.setObjectName("FieldLabel")
         from PyQt6.QtWidgets import QSpinBox
         self._spin_max = QSpinBox()
@@ -156,7 +157,7 @@ class _WebSearchSection(QWidget):
         row_test = QHBoxLayout(self._test_widget)
         row_test.setContentsMargins(0, 0, 0, 0)
         row_test.setSpacing(8)
-        self._test_btn = QPushButton(qta.icon("fa5s.vial", color="#888"), "Tester la cle")
+        self._test_btn = QPushButton(qta.icon("fa5s.vial", color="#888"), tr("Tester la cle"))
         self._test_btn.setObjectName("SecondaryBtn")
         self._test_btn.clicked.connect(self._on_test_key)
         row_test.addWidget(self._test_btn)
@@ -178,7 +179,7 @@ class _WebSearchSection(QWidget):
         self._reset_test_status()
         key_url = meta.get("key_url", "")
         if key_url and needs_key:
-            self._key_url_lbl.setText(f'<a href="{key_url}">Obtenir une cle API</a>')
+            self._key_url_lbl.setText(tr('<a href="{}">Obtenir une cle API</a>').format(key_url))
             self._key_url_lbl.setVisible(True)
         else:
             self._key_url_lbl.setVisible(False)
@@ -191,11 +192,11 @@ class _WebSearchSection(QWidget):
         pid     = self._combo_provider.currentData()
         api_key = self._key_edit.text().strip()
         if not api_key:
-            self._test_status_lbl.setText("Entrez une cle API d'abord")
+            self._test_status_lbl.setText(tr("Entrez une cle API d'abord"))
             self._test_status_lbl.setStyleSheet("color: #ff9800;")
             return
         self._test_btn.setEnabled(False)
-        self._test_status_lbl.setText("Test en cours…")
+        self._test_status_lbl.setText(tr("Test en cours…"))
         self._test_status_lbl.setStyleSheet("")
         self._test_worker = WebKeyTestWorker(pid, api_key)
         self._test_worker.test_ok.connect(self._on_key_test_ok)
@@ -203,13 +204,13 @@ class _WebSearchSection(QWidget):
         self._test_worker.start()
 
     def _on_key_test_ok(self) -> None:
-        self._test_status_lbl.setText("Cle valide")
+        self._test_status_lbl.setText(tr("Cle valide"))
         self._test_status_lbl.setStyleSheet("color: #4caf50; font-weight: bold;")
         self._test_btn.setEnabled(True)
 
     def _on_key_test_error(self, msg: str) -> None:
         short = msg[:100] if len(msg) > 100 else msg
-        self._test_status_lbl.setText(f"Erreur : {short}")
+        self._test_status_lbl.setText(tr("Erreur : {}").format(short))
         self._test_status_lbl.setStyleSheet("color: #e53935; font-weight: bold;")
         self._test_btn.setEnabled(True)
 
@@ -266,7 +267,7 @@ class _IASection(QWidget):
         # Provider
         row_provider = QHBoxLayout()
         row_provider.setSpacing(8)
-        lbl_prov = QLabel("Provider")
+        lbl_prov = QLabel(tr("Provider"))
         lbl_prov.setObjectName("FieldLabel")
         row_provider.addWidget(lbl_prov)
         self._combo_provider = QComboBox()
@@ -281,7 +282,7 @@ class _IASection(QWidget):
         # Clé API
         row_key = QHBoxLayout()
         row_key.setSpacing(8)
-        lbl_key = QLabel("Cle API")
+        lbl_key = QLabel(tr("Cle API"))
         lbl_key.setObjectName("FieldLabel")
         row_key.addWidget(lbl_key)
         self._key_edit = QLineEdit()
@@ -291,7 +292,7 @@ class _IASection(QWidget):
         self._toggle_btn = QPushButton("o")
         self._toggle_btn.setObjectName("ToggleBtn")
         self._toggle_btn.setCheckable(True)
-        self._toggle_btn.setToolTip("Afficher/masquer la clé")
+        self._toggle_btn.setToolTip(tr("Afficher/masquer la clé"))
         self._toggle_btn.clicked.connect(self._on_toggle_key)
         row_key.addWidget(self._toggle_btn)
         layout.addLayout(row_key)
@@ -299,7 +300,7 @@ class _IASection(QWidget):
         # Modèle
         row_model = QHBoxLayout()
         row_model.setSpacing(8)
-        lbl_model = QLabel("Modele")
+        lbl_model = QLabel(tr("Modele"))
         lbl_model.setObjectName("FieldLabel")
         row_model.addWidget(lbl_model)
         self._combo_model = QComboBox()
@@ -307,7 +308,7 @@ class _IASection(QWidget):
         row_model.addWidget(self._combo_model)
         self._refresh_btn = QPushButton("~")
         self._refresh_btn.setObjectName("RefreshBtn")
-        self._refresh_btn.setToolTip("Récupérer les modèles via API")
+        self._refresh_btn.setToolTip(tr("Récupérer les modèles via API"))
         self._refresh_btn.clicked.connect(self._on_refresh_models)
         row_model.addWidget(self._refresh_btn)
         layout.addLayout(row_model)
@@ -330,7 +331,7 @@ class _IASection(QWidget):
         # Mettre à jour le hint de format de clé
         hint = PROVIDERS[provider_id].get("key_hint", "")
         key_url = PROVIDERS[provider_id].get("key_url", "")
-        self._hint_label.setText(f"format: {hint}  |  {key_url}" if hint else "")
+        self._hint_label.setText(tr("format: {}  |  {}").format(hint, key_url) if hint else "")
         self._key_edit.setPlaceholderText(hint or "...")
 
         # Peupler les modèles
@@ -355,7 +356,7 @@ class _IASection(QWidget):
         """Lance la récupération live des modèles via API."""
         api_key = self._key_edit.text().strip()
         if not api_key:
-            self._hint_label.setText("[!] Entrez la clé API avant d'actualiser.")
+            self._hint_label.setText(tr("[!] Entrez la clé API avant d'actualiser."))
             return
 
         provider_id = self._combo_provider.currentData()
@@ -365,7 +366,7 @@ class _IASection(QWidget):
         # Désactiver pendant le chargement
         self._refresh_btn.setEnabled(False)
         self._refresh_btn.setText(".")
-        self._hint_label.setText("Chargement...")
+        self._hint_label.setText(tr("Chargement..."))
 
         self._fetch_worker = ModelFetchWorker(
             provider_id=provider_id,
@@ -387,13 +388,13 @@ class _IASection(QWidget):
         if idx >= 0:
             self._combo_model.setCurrentIndex(idx)
         hint = PROVIDERS.get(self._combo_provider.currentData() or "", {}).get("key_hint", "")
-        self._hint_label.setText(f"{len(models)} modèles chargés")
+        self._hint_label.setText(tr("{} modèles chargés").format(len(models)))
         self._refresh_btn.setEnabled(True)
         self._refresh_btn.setText("~")
 
     def _on_fetch_error(self, msg: str):
         """Erreur de récupération — afficher sans planter."""
-        self._hint_label.setText(f"[!] {msg}")
+        self._hint_label.setText(tr("[!] {}").format(msg))
         self._refresh_btn.setEnabled(True)
         self._refresh_btn.setText("~")
 
@@ -437,41 +438,41 @@ class _IASection(QWidget):
 # (label, tooltip)
 _PROMPT_LABELS = {
     "ia_principale": (
-        "Prompt IA Principale",
-        "Instruction systeme envoyee au debut de chaque conversation.\n"
+        tr("Prompt IA Principale"),
+        tr("Instruction systeme envoyee au debut de chaque conversation.\n"
         "Definit le role, le ton et les regles de conduite de l'IA compagnon.\n"
-        "Toujours presente en tete des messages envoyes a l'API.",
+        "Toujours presente en tete des messages envoyes a l'API."),
     ),
     "archiviste_writer": (
-        "Prompt Archiviste \u2014 extraction",
-        "Instruction utilisee lorsque l'Archiviste analyse un passage du manuscrit\n"
+        tr("Prompt Archiviste \u2014 extraction"),
+        tr("Instruction utilisee lorsque l'Archiviste analyse un passage du manuscrit\n"
         "pour en extraire des faits (personnages, lieux, evenements, relations).\n"
-        "Active a chaque envoi de message contenant du texte a analyser.",
+        "Active a chaque envoi de message contenant du texte a analyser."),
     ),
     "archiviste_reader": (
-        "Prompt Archiviste \u2014 contexte",
-        "Instruction utilisee lorsque l'Archiviste resume les informations pertinentes\n"
+        tr("Prompt Archiviste \u2014 contexte"),
+        tr("Instruction utilisee lorsque l'Archiviste resume les informations pertinentes\n"
         "de la Bible pour repondre a une question de l'auteur.\n"
-        "Injecte le contexte biblique dans la reponse de l'IA principale.",
+        "Injecte le contexte biblique dans la reponse de l'IA principale."),
     ),
     "archiviste_relational": (
-        "Prompt Archiviste \u2014 profil auteur",
-        "Instruction pour construire et mettre a jour le profil relationnel de l'auteur :\n"
+        tr("Prompt Archiviste \u2014 profil auteur"),
+        tr("Instruction pour construire et mettre a jour le profil relationnel de l'auteur :\n"
         "ses preferences, ses habitudes d'ecriture, ses retours recurrents.\n"
-        "Alimente la base relationnelle (relational.db).",
+        "Alimente la base relationnelle (relational.db)."),
     ),
     "session_summarizer": (
-        "Prompt Resumation de session",
-        "Instruction envoyee en fin de session (a la fermeture de l'app) pour\n"
+        tr("Prompt Resumation de session"),
+        tr("Instruction utilisee en fin de session (a la fermeture de l'app) pour\n"
         "produire un resume compact de la conversation.\n"
-        "Ce resume est reinjete en contexte au demarrage de la session suivante.",
+        "Ce resume est reinjete en contexte au demarrage de la session suivante."),
     ),
     "style_profiler": (
-        "Prompt Profil de style",
-        "Instruction utilisee pour analyser un echantillon du manuscrit et\n"
+        tr("Prompt Profil de style"),
+        tr("Instruction utilisee pour analyser un echantillon du manuscrit et\n"
         "produire un profil stylistique de l'auteur (rythme, registre, ton...).\n"
         "Le profil genere est injecte dans chaque conversation pour que l'IA\n"
-        "respecte le style de l'auteur dans ses suggestions.",
+        "respecte le style de l'auteur dans ses suggestions."),
     ),
 }
 
@@ -505,16 +506,16 @@ class _EgoSection(QWidget):
         layout.addWidget(sep)
 
         # Titre
-        title = QLabel("Instructions personnalisees EUGENIA")
+        title = QLabel(tr("Instructions personnalisees EUGENIA"))
         title.setObjectName("SectionTitle")
         layout.addWidget(title)
 
         # Description
         desc = QLabel(
-            "EUGENIA analyse vos echanges et formule ses propres instructions "
+            tr("EUGENIA analyse vos echanges et formule ses propres instructions "
             "comportementales pour mieux vous accompagner. "
             "L'analyse se declenche automatiquement apres quelques minutes "
-            "d'inactivite et a la fermeture de l'application."
+            "d'inactivite et a la fermeture de l'application.")
         )
         desc.setWordWrap(True)
         desc.setObjectName("FieldLabel")
@@ -527,7 +528,7 @@ class _EgoSection(QWidget):
         self._instruction_view.setMinimumHeight(80)
         self._instruction_view.setMaximumHeight(160)
         self._instruction_view.setPlaceholderText(
-            "Aucune instruction generee pour l'instant. Vous pouvez ecrire la votre ici."
+            tr("Aucune instruction generee pour l'instant. Vous pouvez ecrire la votre ici.")
         )
         layout.addWidget(self._instruction_view)
 
@@ -535,7 +536,7 @@ class _EgoSection(QWidget):
         # Ligne : Delai Heartbeat
         hb_row = QHBoxLayout()
         hb_row.setSpacing(8)
-        hb_lbl = QLabel("Délai d'inactivité avant scan (minutes) :")
+        hb_lbl = QLabel(tr("Délai d'inactivité avant scan (minutes) :"))
         hb_lbl.setObjectName("FieldLabel")
         self._hb_spin = QSpinBox()
         self._hb_spin.setRange(1, 60)
@@ -554,13 +555,13 @@ class _EgoSection(QWidget):
         self._status_lbl.setObjectName("FieldLabel")
         row.addWidget(self._status_lbl)
         row.addStretch()
-        self._scan_btn = QPushButton("Scanner maintenant")
+        self._scan_btn = QPushButton(tr("Scanner maintenant"))
         self._scan_btn.setObjectName("ResetPromptBtn")
         self._scan_btn.setIcon(qta.icon("fa5s.sync", color="#a0a0a0"))
         self._scan_btn.setIconSize(QSize(14, 14))
         self._scan_btn.setToolTip(
-            "Lance une analyse de la session courante pour mettre a jour "
-            "les instructions comportementales d'EUGENIA."
+            tr("Lance une analyse de la session courante pour mettre a jour "
+            "les instructions comportementales d'EUGENIA.")
         )
         self._scan_btn.clicked.connect(self.scan_requested)
         row.addWidget(self._scan_btn)
@@ -579,17 +580,17 @@ class _EgoSection(QWidget):
         if scan_count:
             date_str = last_scanned_at[:16].replace("T", " ") if last_scanned_at else "?"
             self._status_lbl.setText(
-                f"Derniere analyse : {date_str}  |  {scan_count} analyse(s)"
+                tr("Derniere analyse : {}  |  {} analyse(s)").format(date_str, scan_count)
             )
         else:
-            self._status_lbl.setText("Aucune analyse effectuee.")
+            self._status_lbl.setText(tr("Aucune analyse effectuee."))
 
     def set_scanning(self, scanning: bool) -> None:
         """Desactive/reactivie le bouton et met a jour l'icone."""
         self._scan_btn.setEnabled(not scanning)
         icon_name = "fa5s.spinner" if scanning else "fa5s.sync"
         self._scan_btn.setIcon(qta.icon(icon_name, color="#a0a0a0"))
-        self._scan_btn.setText("Analyse en cours..." if scanning else "Scanner maintenant")
+        self._scan_btn.setText(tr("Analyse en cours...") if scanning else tr("Scanner maintenant"))
 
     def get_instruction(self) -> str:
         """Retourne le texte de l'instruction Ego."""
@@ -623,7 +624,7 @@ class _PromptsSection(QWidget):
         layout.setContentsMargins(0, 4, 0, 8)
         layout.setSpacing(10)
 
-        title = QLabel("Prompts systeme")
+        title = QLabel(tr("Prompts systeme"))
         title.setObjectName("SectionTitle")
         layout.addWidget(title)
 
@@ -636,7 +637,7 @@ class _PromptsSection(QWidget):
             lbl.setToolTip(tooltip)
             row.addWidget(lbl)
             row.addStretch()
-            reset_btn = QPushButton("Reinitialiser")
+            reset_btn = QPushButton(tr("Reinitialiser"))
             reset_btn.setObjectName("ResetPromptBtn")
             reset_btn.clicked.connect(lambda checked, k=key: self._on_reset(k))
             row.addWidget(reset_btn)
@@ -687,28 +688,28 @@ class _InterfaceSection(QWidget):
         layout.setSpacing(12)
 
         # Theme
-        title = QLabel("Apparence")
+        title = QLabel(tr("Apparence"))
         title.setObjectName("SectionTitle")
         layout.addWidget(title)
 
         row = QHBoxLayout()
         row.setSpacing(16)
-        lbl = QLabel("Theme")
+        lbl = QLabel(tr("Theme"))
         lbl.setObjectName("FieldLabel")
         lbl.setToolTip(
-            "Choix du theme de l'interface.\n"
-            "Le changement est applique immediatement a la sauvegarde."
+            tr("Choix du theme de l'interface.\n"
+            "Le changement est applique immediatement a la sauvegarde.")
         )
         row.addWidget(lbl)
 
         self._theme_combo = QComboBox()
-        self._theme_combo.addItem("Glassmorphism (Sombre)", "glass")
-        self._theme_combo.addItem("Glassmorphism (Clair)", "glass_light")
-        self._theme_combo.addItem("Flat macOS (Sombre)", "flat_mac")
-        self._theme_combo.addItem("Flat macOS (Clair)", "flat_mac_light")
-        self._theme_combo.addItem("Cyber Pro", "cyber")
-        self._theme_combo.addItem("Classique Sombre", "dark")
-        self._theme_combo.addItem("Classique Clair", "light")
+        self._theme_combo.addItem(tr("Glassmorphism (Sombre)"), "glass")
+        self._theme_combo.addItem(tr("Glassmorphism (Clair)"), "glass_light")
+        self._theme_combo.addItem(tr("Flat macOS (Sombre)"), "flat_mac")
+        self._theme_combo.addItem(tr("Flat macOS (Clair)"), "flat_mac_light")
+        self._theme_combo.addItem(tr("Cyber Pro"), "cyber")
+        self._theme_combo.addItem(tr("Classique Sombre"), "dark")
+        self._theme_combo.addItem(tr("Classique Clair"), "light")
         self._theme_combo.setFixedWidth(200)
         
         row.addWidget(self._theme_combo)
@@ -718,9 +719,9 @@ class _InterfaceSection(QWidget):
         # Taille de police
         row_font = QHBoxLayout()
         row_font.setSpacing(12)
-        lbl_font = QLabel("Taille de police")
+        lbl_font = QLabel(tr("Taille de police"))
         lbl_font.setObjectName("FieldLabel")
-        lbl_font.setToolTip("Taille de la police de l'interface (12 a 16 px).")
+        lbl_font.setToolTip(tr("Taille de la police de l'interface (12 a 16 px)."))
         row_font.addWidget(lbl_font)
 
         self._font_slider = QSlider(Qt.Orientation.Horizontal)
@@ -733,14 +734,14 @@ class _InterfaceSection(QWidget):
         self._font_slider.setFixedWidth(120)
         row_font.addWidget(self._font_slider)
 
-        self._font_value_lbl = QLabel("13 px")
+        self._font_value_lbl = QLabel(tr("13 px"))
         self._font_value_lbl.setObjectName("FieldLabel")
         self._font_value_lbl.setFixedWidth(36)
         row_font.addWidget(self._font_value_lbl)
         row_font.addStretch()
 
         self._font_slider.valueChanged.connect(
-            lambda v: self._font_value_lbl.setText(f"{v} px")
+            lambda v: self._font_value_lbl.setText(tr("{} px").format(v))
         )
 
         layout.addLayout(row_font)
@@ -748,9 +749,9 @@ class _InterfaceSection(QWidget):
         # Famille de police
         row_family = QHBoxLayout()
         row_family.setSpacing(12)
-        lbl_family = QLabel("Police")
+        lbl_family = QLabel(tr("Police"))
         lbl_family.setObjectName("FieldLabel")
-        lbl_family.setToolTip("Police de l'interface.")
+        lbl_family.setToolTip(tr("Police de l'interface."))
         row_family.addWidget(lbl_family)
 
         self._font_family_combo = QComboBox()
@@ -764,9 +765,9 @@ class _InterfaceSection(QWidget):
         # Interligne chat
         row_lh = QHBoxLayout()
         row_lh.setSpacing(12)
-        lbl_lh = QLabel("Interligne chat")
+        lbl_lh = QLabel(tr("Interligne chat"))
         lbl_lh.setObjectName("FieldLabel")
-        lbl_lh.setToolTip("Interligne des bulles de conversation (1.2 a 2.2).")
+        lbl_lh.setToolTip(tr("Interligne des bulles de conversation (1.2 a 2.2)."))
         row_lh.addWidget(lbl_lh)
 
         self._chat_lh_slider = QSlider(Qt.Orientation.Horizontal)
@@ -793,9 +794,9 @@ class _InterfaceSection(QWidget):
         # Opacité notification
         row_op = QHBoxLayout()
         row_op.setSpacing(12)
-        lbl_op = QLabel("Opacité annotations")
+        lbl_op = QLabel(tr("Opacité annotations"))
         lbl_op.setObjectName("FieldLabel")
-        lbl_op.setToolTip("Transparence des encadrés d'annotations Ghost Writer (30 à 100 %).")
+        lbl_op.setToolTip(tr("Transparence des encadrés d'annotations Ghost Writer (30 à 100 %)."))
         row_op.addWidget(lbl_op)
 
         self._notif_opacity_slider = QSlider(Qt.Orientation.Horizontal)
@@ -832,7 +833,7 @@ class _InterfaceSection(QWidget):
             btn_c = QPushButton()
             btn_c.setFixedSize(28, 20)
             btn_c.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_c.setToolTip(f"Cliquer pour changer '{label_text}'")
+            btn_c.setToolTip(tr("Cliquer pour changer '{}'").format(label_text))
             btn_c.clicked.connect(lambda checked, k=key: self._pick_color(k))
             self._color_btns[key] = btn_c
             row_c.addWidget(btn_c)
@@ -840,13 +841,13 @@ class _InterfaceSection(QWidget):
             btn_reset_c = QPushButton("↺")
             btn_reset_c.setFixedSize(22, 20)
             btn_reset_c.setObjectName("ResetPromptBtn")
-            btn_reset_c.setToolTip("Réinitialiser")
+            btn_reset_c.setToolTip(tr("Réinitialiser"))
             btn_reset_c.clicked.connect(lambda checked, k=key: self._reset_color(k))
             row_c.addWidget(btn_reset_c)
             row_c.addStretch()
             layout.addLayout(row_c)
 
-        btn_reset_all = QPushButton("Réinitialiser toutes les couleurs")
+        btn_reset_all = QPushButton(tr("Réinitialiser toutes les couleurs"))
         btn_reset_all.setObjectName("ResetPromptBtn")
         btn_reset_all.clicked.connect(self._reset_all_colors)
         layout.addWidget(btn_reset_all)
@@ -856,17 +857,17 @@ class _InterfaceSection(QWidget):
         sep_adv.setFrameShape(QFrame.Shape.HLine)
         layout.addWidget(sep_adv)
 
-        title_adv = QLabel("Avancé")
+        title_adv = QLabel(tr("Avancé"))
         title_adv.setObjectName("SectionTitle")
         layout.addWidget(title_adv)
 
         row_scroll = QHBoxLayout()
         row_scroll.setSpacing(12)
-        lbl_scroll = QLabel("Vitesse synchro scroll")
+        lbl_scroll = QLabel(tr("Vitesse synchro scroll"))
         lbl_scroll.setObjectName("FieldLabel")
         lbl_scroll.setToolTip(
-            "Sensibilité du suivi scroll des annotations Ghost Writer.\n"
-            "1 = très lent, 5 = normal, 10 = très rapide."
+            tr("Sensibilité du suivi scroll des annotations Ghost Writer.\n"
+            "1 = très lent, 5 = normal, 10 = très rapide.")
         )
         row_scroll.addWidget(lbl_scroll)
 
@@ -893,9 +894,9 @@ class _InterfaceSection(QWidget):
 
         row_margin = QHBoxLayout()
         row_margin.setSpacing(12)
-        lbl_margin = QLabel("Marge droite annotations")
+        lbl_margin = QLabel(tr("Marge droite annotations"))
         lbl_margin.setObjectName("FieldLabel")
-        lbl_margin.setToolTip("Distance entre les annotations Ghost Writer et le bord droit (px).")
+        lbl_margin.setToolTip(tr("Distance entre les annotations Ghost Writer et le bord droit (px)."))
         row_margin.addWidget(lbl_margin)
 
         self._badge_margin_r_slider = QSlider(Qt.Orientation.Horizontal)
@@ -921,17 +922,17 @@ class _InterfaceSection(QWidget):
 
         row_ocr = QHBoxLayout()
         row_ocr.setSpacing(12)
-        lbl_ocr = QLabel("Moteur OCR")
+        lbl_ocr = QLabel(tr("Moteur OCR"))
         lbl_ocr.setObjectName("FieldLabel")
         lbl_ocr.setToolTip(
-            "Windows OCR : rapide (~0.1s), natif Windows 10/11.\n"
-            "EasyOCR : précis mais lent (3–8s, nécessite PyTorch)."
+            tr("Windows OCR : rapide (~0.1s), natif Windows 10/11.\n"
+            "EasyOCR : précis mais lent (3–8s, nécessite PyTorch).")
         )
         row_ocr.addWidget(lbl_ocr)
 
         self._ocr_combo = QComboBox()
-        self._ocr_combo.addItem("Windows OCR (rapide)", "winrt")
-        self._ocr_combo.addItem("EasyOCR (précis, lent)", "easyocr")
+        self._ocr_combo.addItem(tr("Windows OCR (rapide)"), "winrt")
+        self._ocr_combo.addItem(tr("EasyOCR (précis, lent)"), "easyocr")
         self._ocr_combo.setFixedWidth(200)
         row_ocr.addWidget(self._ocr_combo)
         row_ocr.addStretch()
@@ -1000,7 +1001,7 @@ class _InterfaceSection(QWidget):
     def set_badge_margin_r(self, margin: int) -> None:
         v = max(0, min(200, margin))
         self._badge_margin_r_slider.setValue(v)
-        self._badge_margin_r_lbl.setText(f"{v} px")
+        self._badge_margin_r_lbl.setText(tr("{} px").format(v))
 
 
 
@@ -1047,7 +1048,7 @@ class _InterfaceSection(QWidget):
         palette = get_colors(theme)
         overrides = ThemeConfig.instance().get_overrides(theme)
         current = overrides.get(key, palette.get(key, "#888888"))
-        color = QColorDialog.getColor(QColor(current), self, f"Couleur — {key}")
+        color = QColorDialog.getColor(QColor(current), self, tr("Couleur — {}").format(key))
         if color.isValid():
             ThemeConfig.instance().set_override(theme, key, color.name())
             self._refresh_color_buttons()
@@ -1136,33 +1137,30 @@ class _ProfileSection(QWidget):
             return field
 
         intro = QLabel(
-            f"Profil de <b>{self._author_name}</b> — "
-            "ces informations sont injectees en contexte systeme de l'IA principale "
-            "pour chaque session, quel que soit le projet ouvert."
+            tr("Profil de <b>{}</b> — ces informations sont injectees en contexte systeme de l'IA principale pour chaque session, quel que soit le projet ouvert.").format(self._author_name)
         )
         intro.setWordWrap(True)
         intro.setObjectName("GuideIntro")
         layout.addWidget(intro)
 
-        self._bio   = _field("Qui es-tu ?",
-            "Auteur de science-fiction, j'ecris des romans hard SF explorant la conscience artificielle.",
+        self._bio   = _field(tr("Qui es-tu ?"),
+            tr("Auteur de science-fiction, j'ecris des romans hard SF explorant la conscience artificielle."),
             70)
-        self._prefs = _field("Ce que tu attends d'EUGENIA",
-            "Suggestions courtes et directes. Pas de reformulations creuses. "
-            "Poser des questions plutot que proposer du texte tout fait.",
+        self._prefs = _field(tr("Ce que tu attends d'EUGENIA"),
+            tr("Suggestions courtes et directes. Pas de reformulations creuses. Poser des questions plutot que proposer du texte tout fait."),
             70)
-        self._tone  = _field("Ton souhaite",
-            "Tutoiement, direct, sans condescendance.",
+        self._tone  = _field(tr("Ton souhaite"),
+            tr("Tutoiement, direct, sans condescendance."),
             45)
-        self._topics = _field("Genres et themes d'ecriture",
-            "science-fiction, hard SF, fantasy sombre, philosophie",
+        self._topics = _field(tr("Genres et themes d'ecriture"),
+            tr("science-fiction, hard SF, fantasy sombre, philosophie"),
             45)
 
         self._status = QLabel("")
         self._status.setObjectName("StatusLabel")
         layout.addWidget(self._status)
 
-        btn = QPushButton("Sauvegarder le profil")
+        btn = QPushButton(tr("Sauvegarder le profil"))
         btn.setObjectName("SaveBtn")
         btn.clicked.connect(self._save)
         layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignRight)
@@ -1186,13 +1184,13 @@ class _ProfileSection(QWidget):
             "topics":      self._topics.toPlainText().strip(),
         })
         from datetime import datetime
-        self._status.setText(f"Profil sauvegarde a {datetime.now().strftime('%H:%M:%S')}")
+        self._status.setText(tr("Profil sauvegarde a {}").format(datetime.now().strftime('%H:%M:%S')))
         self.saved.emit()
 
 
 # ─── Guide ────────────────────────────────────────────────────────────────────
 
-_GUIDE_HTML = """
+_GUIDE_HTML = tr("""
 <style>
   body  { margin: 0; padding: 0; }
   h2    { font-size: 13px; font-weight: bold; margin: 14px 0 4px 0; }
@@ -1238,7 +1236,7 @@ _GUIDE_HTML = """
 
 <h3><span class="cmd">/edition</span> &mdash; Rouvrir un document edite</h3>
 <p>Recharge en mode edition un document deja existant, identifie par son titre
-   exact. La liste des documents edites est aussi accessible dans le panneau
+   exact. La liste des documents edites is also accessible dans le panneau
    Sources (double-clic pour rouvrir).<br/>
    <b>Exemple :</b> <code>/edition Prologue du roman</code></p>
 
@@ -1265,7 +1263,7 @@ _GUIDE_HTML = """
   <hr/>
   
   <p><i>D'autres commandes seront ajoutees ici au fil des developpements.</i></p>
-"""
+""")
 
 
 class _GuideSection(QWidget):
@@ -1305,27 +1303,27 @@ class _BackupSection(QWidget):
         layout.setContentsMargins(0, 4, 0, 8)
         layout.setSpacing(8)
 
-        title = QLabel("Sauvegardes de configuration")
+        title = QLabel(tr("Sauvegardes de configuration"))
         title.setObjectName("SectionTitle")
         layout.addWidget(title)
 
         desc = QLabel(
-            "Exportez vos clés API et/ou instructions dans un fichier JSON, "
-            "et restaurez-les sur un autre poste ou après réinstallation."
+            tr("Exportez vos clés API et/ou instructions dans un fichier JSON, "
+            "et restaurez-les sur un autre poste ou après réinstallation.")
         )
         desc.setWordWrap(True)
         desc.setObjectName("FieldLabel")
         layout.addWidget(desc)
 
         # Choix du contenu à sauvegarder
-        lbl_what = QLabel("Contenu à exporter :")
+        lbl_what = QLabel(tr("Contenu à exporter :"))
         lbl_what.setObjectName("FieldLabel")
         layout.addWidget(lbl_what)
 
         btn_group = QButtonGroup(self)
-        self._rb_api   = QRadioButton("API uniquement  (clés, providers, modèles)")
-        self._rb_instr = QRadioButton("Instructions uniquement  (prompts système)")
-        self._rb_both  = QRadioButton("API + Instructions")
+        self._rb_api   = QRadioButton(tr("API uniquement  (clés, providers, modèles)"))
+        self._rb_instr = QRadioButton(tr("Instructions uniquement  (prompts système)"))
+        self._rb_both  = QRadioButton(tr("API + Instructions"))
         self._rb_both.setChecked(True)
         for rb in (self._rb_api, self._rb_instr, self._rb_both):
             btn_group.addButton(rb)
@@ -1336,14 +1334,14 @@ class _BackupSection(QWidget):
         row.setSpacing(8)
 
         self._save_btn = QPushButton(
-            qta.icon("fa5s.file-export", color="#888"), "Exporter…"
+            qta.icon("fa5s.file-export", color="#888"), tr("Exporter…")
         )
         self._save_btn.setObjectName("SecondaryBtn")
         self._save_btn.clicked.connect(self._on_save)
         row.addWidget(self._save_btn)
 
         self._load_btn = QPushButton(
-            qta.icon("fa5s.file-import", color="#888"), "Restaurer…"
+            qta.icon("fa5s.file-import", color="#888"), tr("Restaurer…")
         )
         self._load_btn.setObjectName("SecondaryBtn")
         self._load_btn.clicked.connect(self._on_load)
@@ -1363,9 +1361,9 @@ class _BackupSection(QWidget):
         from PyQt6.QtWidgets import QFileDialog
         path, _ = QFileDialog.getSaveFileName(
             self,
-            "Exporter la configuration EUGENIA",
+            tr("Exporter la configuration EUGENIA"),
             "eugenia_config_backup.json",
-            "Sauvegarde EUGENIA (*.json)",
+            tr("Sauvegarde EUGENIA (*.json)"),
         )
         if not path:
             return
@@ -1379,9 +1377,9 @@ class _BackupSection(QWidget):
         from PyQt6.QtWidgets import QFileDialog
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Restaurer une configuration EUGENIA",
+            tr("Restaurer une configuration EUGENIA"),
             "",
-            "Sauvegarde EUGENIA (*.json)",
+            tr("Sauvegarde EUGENIA (*.json)"),
         )
         if path:
             self.load_requested.emit(path)
@@ -1407,26 +1405,26 @@ class _MemorySection(QWidget):
         layout.setSpacing(10)
 
         # ── Titre ──────────────────────────────────────────────────────────
-        title = QLabel("Déduplication sémantique")
+        title = QLabel(tr("Déduplication sémantique"))
         title.setObjectName("SectionTitle")
         layout.addWidget(title)
 
         # ── Description ────────────────────────────────────────────────────
         desc = QLabel(
-            "Avant d'ingérer un nouveau document, chaque chunk est comparé "
+            tr("Avant d'ingérer un nouveau document, chaque chunk est comparé "
             "sémantiquement aux chunks déjà indexés. Si la similarité dépasse "
-            "le seuil, le chunk est ignoré (doublon quasi-identique)."
+            "le seuil, le chunk est ignoré (doublon quasi-identique).")
         )
         desc.setWordWrap(True)
         desc.setObjectName("FieldLabel")
         layout.addWidget(desc)
 
         # ── Activation ─────────────────────────────────────────────────────
-        self._chk_enabled = QCheckBox("Activer la déduplication sémantique")
+        self._chk_enabled = QCheckBox(tr("Activer la déduplication sémantique"))
         self._chk_enabled.setChecked(True)
         self._chk_enabled.setToolTip(
-            "Si décoché, les chunks sont ingérés sans vérification FAISS.\n"
-            "Utile pour forcer la ré-ingestion d'un document modifié."
+            tr("Si décoché, les chunks sont ingérés sans vérification FAISS.\n"
+            "Utile pour forcer la ré-ingestion d'un document modifié.")
         )
         layout.addWidget(self._chk_enabled)
 
@@ -1434,21 +1432,21 @@ class _MemorySection(QWidget):
         row = QHBoxLayout()
         row.setSpacing(8)
 
-        lbl = QLabel("Seuil de similarité cosinus")
+        lbl = QLabel(tr("Seuil de similarité cosinus"))
         lbl.setObjectName("FieldLabel")
 
         # Icône info avec tooltip complet
         tip_icon = QLabel("ℹ")
         tip_icon.setObjectName("InfoTip")
         tip_icon.setToolTip(
-            "Seuil cosinus [0.50 – 0.99] au-dessus duquel un chunk est\n"
+            tr("Seuil cosinus [0.50 – 0.99] au-dessus duquel un chunk est\n"
             "considéré comme un doublon sémantique et ignoré lors de l'ingest.\n\n"
             "Exemples de valeurs :\n"
             "  0.93 (défaut) — quasi-identique (même texte légèrement reformulé)\n"
             "  0.85          — variantes stylistiques d'un même passage\n"
             "  0.70          — thèmes similaires (risque de faux positifs)\n\n"
             "↓ Réduire = filtrage plus agressif (exclut davantage)\n"
-            "↑ Augmenter = filtrage plus strict (tolère plus de variantes)"
+            "↑ Augmenter = filtrage plus strict (tolère plus de variantes)")
         )
         tip_icon.setCursor(QCursor(Qt.CursorShape.WhatsThisCursor))
 
@@ -1460,8 +1458,8 @@ class _MemorySection(QWidget):
         self._spin_threshold.setMinimumWidth(80)
         self._spin_threshold.setMaximumWidth(110)
         self._spin_threshold.setToolTip(
-            "Seuil cosinus de déduplication (0.50 – 0.99).\n"
-            "Défaut recommandé : 0.93"
+            tr("Seuil cosinus de déduplication (0.50 – 0.99).\n"
+            "Défaut recommandé : 0.93")
         )
 
         row.addWidget(lbl)
@@ -1472,9 +1470,9 @@ class _MemorySection(QWidget):
 
         # ── Infobulle contextuelle ─────────────────────────────────────────
         info = QLabel(
-            "💡 Astuce : augmentez le seuil (0.95–0.98) si des passages "
+            tr("💡 Astuce : augmentez le seuil (0.95–0.98) si des passages "
             "similaires mais distincts sont filtrés à tort. Réduisez-le "
-            "(0.85–0.90) pour éliminer les reformulations proches."
+            "(0.85–0.90) pour éliminer les reformulations proches.")
         )
         info.setObjectName("InfoTip")
         info.setWordWrap(True)
@@ -1555,15 +1553,15 @@ class SettingsPanel(QWidget):
         # ── Onglet 1 : Modeles IA ─────────────────────────────────────────────
         tab_models = QWidget()
         tab_models.setObjectName("ScrollContent")
-        self._tabs.addTab(self._make_scroll(tab_models), "Modeles IA")
+        self._tabs.addTab(self._make_scroll(tab_models), tr("Modeles IA"))
 
         ml = QVBoxLayout(tab_models)
         ml.setContentsMargins(12, 8, 12, 12)
         ml.setSpacing(0)
 
-        self._sec_principale = _IASection("IA Principale", embed_mode=False)
-        self._sec_archiviste = _IASection("IA Archiviste", embed_mode=False)
-        self._sec_embed      = _IASection("IA Embed",      embed_mode=True)
+        self._sec_principale = _IASection(tr("IA Principale"), embed_mode=False)
+        self._sec_archiviste = _IASection(tr("IA Archiviste"), embed_mode=False)
+        self._sec_embed      = _IASection(tr("IA Embed"),      embed_mode=True)
 
         ml.addWidget(self._sec_principale)
         ml.addWidget(self._separator())
@@ -1583,7 +1581,7 @@ class SettingsPanel(QWidget):
         # ── Onglet 2 : Instructions ───────────────────────────────────────────
         tab_prompts = QWidget()
         tab_prompts.setObjectName("ScrollContent")
-        self._tabs.addTab(self._make_scroll(tab_prompts), "Instructions")
+        self._tabs.addTab(self._make_scroll(tab_prompts), tr("Instructions"))
 
         pl = QVBoxLayout(tab_prompts)
         pl.setContentsMargins(12, 8, 12, 12)
@@ -1602,7 +1600,7 @@ class SettingsPanel(QWidget):
         # ── Onglet 3 : Interface ──────────────────────────────────────────────
         tab_interface = QWidget()
         tab_interface.setObjectName("ScrollContent")
-        self._tabs.addTab(self._make_scroll(tab_interface), "Interface")
+        self._tabs.addTab(self._make_scroll(tab_interface), tr("Interface"))
 
         il = QVBoxLayout(tab_interface)
         il.setContentsMargins(12, 8, 12, 12)
@@ -1616,7 +1614,7 @@ class SettingsPanel(QWidget):
         # ── Onglet 4 : Mémoire ────────────────────────────────────────────────
         tab_memory = QWidget()
         tab_memory.setObjectName("ScrollContent")
-        self._tabs.addTab(self._make_scroll(tab_memory), "Mémoire")
+        self._tabs.addTab(self._make_scroll(tab_memory), tr("Mémoire"))
 
         ml = QVBoxLayout(tab_memory)
         ml.setContentsMargins(12, 8, 12, 12)
@@ -1629,7 +1627,7 @@ class SettingsPanel(QWidget):
         # ── Onglet 5 : Profil auteur ──────────────────────────────────────────
         tab_profile = QWidget()
         tab_profile.setObjectName("ScrollContent")
-        self._tabs.addTab(self._make_scroll(tab_profile), "Profil")
+        self._tabs.addTab(self._make_scroll(tab_profile), tr("Profil"))
 
         pp = QVBoxLayout(tab_profile)
         pp.setContentsMargins(12, 8, 12, 12)
@@ -1645,7 +1643,7 @@ class SettingsPanel(QWidget):
         # ── Onglet 5 : Guide ──────────────────────────────────────────────────
         tab_guide = QWidget()
         tab_guide.setObjectName("ScrollContent")
-        self._tabs.addTab(self._make_scroll(tab_guide), "Guide")
+        self._tabs.addTab(self._make_scroll(tab_guide), tr("Guide"))
 
         gl = QVBoxLayout(tab_guide)
         gl.setContentsMargins(12, 8, 12, 12)
@@ -1666,7 +1664,7 @@ class SettingsPanel(QWidget):
         fl.addWidget(self._status_label)
         fl.addStretch()
 
-        self._save_btn = QPushButton("Sauvegarder")
+        self._save_btn = QPushButton(tr("Sauvegarder"))
         self._save_btn.setObjectName("SaveBtn")
         self._save_btn.clicked.connect(self._on_save)
         fl.addWidget(self._save_btn)
@@ -1751,7 +1749,7 @@ class SettingsPanel(QWidget):
         )
 
         from datetime import datetime
-        self._status_label.setText(f"Sauvegarde a {datetime.now().strftime('%H:%M:%S')}")
+        self._status_label.setText(tr("Sauvegarde a {}").format(datetime.now().strftime('%H:%M:%S')))
 
         self.ego_instruction_saved.emit(self._sec_ego.get_instruction())
         self.config_saved.emit(config)
@@ -1789,12 +1787,12 @@ class SettingsPanel(QWidget):
             if include_api:   parts.append("API")
             if include_instr: parts.append("Instructions")
             self._sec_backup.set_status(
-                f"Exporté ({' + '.join(parts)}) → {Path(path).name}",
+                tr("Exporté ({}) → {}").format(' + '.join(parts), Path(path).name),
                 ok=True,
             )
             logger.info("SettingsPanel — backup exporté : %s", path)
         except Exception as exc:
-            self._sec_backup.set_status(f"Erreur export : {exc}", ok=False)
+            self._sec_backup.set_status(tr("Erreur export : {}").format(exc), ok=False)
             logger.error("SettingsPanel — backup save error : %s", exc)
 
     def _on_backup_load(self, path: str) -> None:
@@ -1803,7 +1801,7 @@ class SettingsPanel(QWidget):
         try:
             data = load_settings_backup(path)
         except Exception as exc:
-            self._sec_backup.set_status(f"Erreur lecture : {exc}", ok=False)
+            self._sec_backup.set_status(tr("Erreur lecture : {}").format(exc), ok=False)
             logger.error("SettingsPanel — backup load error : %s", exc)
             return
 
@@ -1823,8 +1821,7 @@ class SettingsPanel(QWidget):
 
         date_str = data.get("_date", "?")
         self._sec_backup.set_status(
-            f"Restauré ({' + '.join(parts)}) du {date_str} — "
-            "cliquez sur Sauvegarder pour appliquer.",
+            tr("Restauré ({}) du {} — cliquez sur Sauvegarder pour appliquer.").format(' + '.join(parts), date_str),
             ok=True,
         )
         logger.info("SettingsPanel — backup restauré depuis %s (%s)", path, parts)

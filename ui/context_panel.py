@@ -15,6 +15,7 @@ from ui.sources_panel import SourcesPanel
 from ui.style_panel import StylePanel
 from ui.memory_panel import MemoryPanel
 from ui.stats_panel import StatsPanel
+from core.i18n import tr
 
 PANEL_TITLES = {
     "bible":        "BIBLE",
@@ -67,7 +68,7 @@ class ContextPanel(QWidget):
         layout.addWidget(self._stack)
 
         # Page 0 : placeholder générique
-        self._placeholder = QLabel("Clique sur une icône\npour ouvrir ce panneau.")
+        self._placeholder = QLabel(tr("Clique sur une icône\npour ouvrir ce panneau."))
         self._placeholder.setObjectName("PanelContent")
         self._placeholder.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self._placeholder.setWordWrap(True)
@@ -108,7 +109,7 @@ class ContextPanel(QWidget):
 
     def set_content(self, icon_id: str):
         """Appelé par MainWindow quand une icône est activée."""
-        self.title_label.setText(PANEL_TITLES.get(icon_id, "—"))
+        self.title_label.setText(tr(PANEL_TITLES.get(icon_id, "—")))
 
         if icon_id == "bible":
             self._stack.setCurrentIndex(1)
@@ -126,7 +127,7 @@ class ContextPanel(QWidget):
             self._stack.setCurrentIndex(7)
         else:
             self._placeholder.setText(
-                f"Section \u00ab {PANEL_TITLES.get(icon_id, icon_id)} \u00bb\n\u2014 \u00e0 construire."
+                tr("Section « {} »\n— à construire.").format(tr(PANEL_TITLES.get(icon_id, icon_id)))
             )
             self._stack.setCurrentIndex(0)
 

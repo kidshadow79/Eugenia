@@ -36,6 +36,7 @@ from PyQt6.QtWidgets import (
 )
 
 from core.stats_engine import CustomStatEntry, DocStatEntry
+from core.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class _DropZone(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._label = QLabel("Glisser un .docx ici")
+        self._label = QLabel(tr("Glisser un .docx ici"))
         self._label.setObjectName("DropLabel")
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._label)
@@ -134,22 +135,22 @@ class StatsPanel(QWidget):
         inner_layout.addWidget(self._drop_zone)
 
         # ── Section Sources pour /stat ────────────────────────────
-        hdr_sources = QLabel("SOURCES POUR /STAT")
+        hdr_sources = QLabel(tr("SOURCES POUR /STAT"))
         hdr_sources.setObjectName("SectionHeader")
         inner_layout.addWidget(hdr_sources)
 
         sources_row = QHBoxLayout()
         sources_row.setContentsMargins(8, 2, 8, 2)
         sources_row.setSpacing(14)
-        self._cb_docs = QCheckBox("Docs importés")
+        self._cb_docs = QCheckBox(tr("Docs importés"))
         self._cb_docs.setObjectName("StatSource")
         self._cb_docs.setChecked(True)
-        self._cb_docs.setToolTip("Injecter le contenu des documents suivis lors d'un /stat")
+        self._cb_docs.setToolTip(tr("Injecter le contenu des documents suivis lors d'un /stat"))
         sources_row.addWidget(self._cb_docs)
-        self._cb_bible = QCheckBox("Bible")
+        self._cb_bible = QCheckBox(tr("Bible"))
         self._cb_bible.setObjectName("StatSource")
         self._cb_bible.setChecked(False)
-        self._cb_bible.setToolTip("Injecter la Bible complète du projet lors d'un /stat")
+        self._cb_bible.setToolTip(tr("Injecter la Bible complète du projet lors d'un /stat"))
         sources_row.addWidget(self._cb_bible)
         sources_row.addStretch()
         inner_layout.addLayout(sources_row)
@@ -158,7 +159,7 @@ class StatsPanel(QWidget):
         browse_row = QHBoxLayout()
         browse_row.setContentsMargins(0, 0, 0, 0)
         browse_row.addStretch()
-        self._browse_btn = QPushButton("Parcourir...")
+        self._browse_btn = QPushButton(tr("Parcourir..."))
         self._browse_btn.setObjectName("BtnBrowse")
         self._browse_btn.setIcon(qta.icon("fa5s.archive", color="#888888"))
         self._browse_btn.setIconSize(QSize(12, 12))
@@ -168,7 +169,7 @@ class StatsPanel(QWidget):
         inner_layout.addLayout(browse_row)
 
         # ── Section Documents suivis ─────────────────────────────────
-        hdr_docs = QLabel("DOCUMENTS SUIVIS")
+        hdr_docs = QLabel(tr("DOCUMENTS SUIVIS"))
         hdr_docs.setObjectName("SectionHeader")
         inner_layout.addWidget(hdr_docs)
 
@@ -186,7 +187,7 @@ class StatsPanel(QWidget):
         )
         inner_layout.addWidget(self._docs_list)
 
-        self._docs_empty = QLabel("Aucun document suivi.")
+        self._docs_empty = QLabel(tr("Aucun document suivi."))
         self._docs_empty.setObjectName("EmptyHint")
         inner_layout.addWidget(self._docs_empty)
 
@@ -196,7 +197,7 @@ class StatsPanel(QWidget):
         self._doc_chart_btn.setObjectName("BtnRefresh")
         self._doc_chart_btn.setIcon(qta.icon("fa5s.chart-line", color="#888888"))
         self._doc_chart_btn.setIconSize(QSize(12, 12))
-        self._doc_chart_btn.setToolTip("Voir le graphique")
+        self._doc_chart_btn.setToolTip(tr("Voir le graphique"))
         self._doc_chart_btn.setEnabled(False)
         self._doc_chart_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._doc_chart_btn.clicked.connect(self._on_doc_chart_click)
@@ -206,7 +207,7 @@ class StatsPanel(QWidget):
         self._doc_delete_btn.setObjectName("BtnDelete")
         self._doc_delete_btn.setIcon(qta.icon("fa5s.trash-alt", color="#c94f4f"))
         self._doc_delete_btn.setIconSize(QSize(12, 12))
-        self._doc_delete_btn.setToolTip("Supprimer ce document et ses stats")
+        self._doc_delete_btn.setToolTip(tr("Supprimer ce document et ses stats"))
         self._doc_delete_btn.setEnabled(False)
         self._doc_delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._doc_delete_btn.clicked.connect(self._on_doc_delete_click)
@@ -220,11 +221,11 @@ class StatsPanel(QWidget):
         inner_layout.addWidget(sep)
 
         # ── Section Stats personnalisées ─────────────────────────────
-        hdr_custom = QLabel("STATS PERSONNALISEES")
+        hdr_custom = QLabel(tr("STATS PERSONNALISEES"))
         hdr_custom.setObjectName("SectionHeader")
         inner_layout.addWidget(hdr_custom)
 
-        hint = QLabel('Utilisez /stat dans le chat pour créer une stat.')
+        hint = QLabel(tr('Utilisez /stat dans le chat pour créer une stat.'))
         hint.setObjectName("EmptyHint")
         hint.setWordWrap(True)
         inner_layout.addWidget(hint)
@@ -243,7 +244,7 @@ class StatsPanel(QWidget):
         )
         inner_layout.addWidget(self._custom_list)
 
-        self._custom_empty = QLabel("Aucune stat personnalisée.")
+        self._custom_empty = QLabel(tr("Aucune stat personnalisée."))
         self._custom_empty.setObjectName("EmptyHint")
         inner_layout.addWidget(self._custom_empty)
 
@@ -253,7 +254,7 @@ class StatsPanel(QWidget):
         self._custom_chart_btn.setObjectName("BtnRefresh")
         self._custom_chart_btn.setIcon(qta.icon("fa5s.chart-pie", color="#888888"))
         self._custom_chart_btn.setIconSize(QSize(12, 12))
-        self._custom_chart_btn.setToolTip("Voir le graphique")
+        self._custom_chart_btn.setToolTip(tr("Voir le graphique"))
         self._custom_chart_btn.setEnabled(False)
         self._custom_chart_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._custom_chart_btn.clicked.connect(self._on_custom_chart_click)
@@ -263,7 +264,7 @@ class StatsPanel(QWidget):
         self._custom_delete_btn.setObjectName("BtnDelete")
         self._custom_delete_btn.setIcon(qta.icon("fa5s.trash-alt", color="#c94f4f"))
         self._custom_delete_btn.setIconSize(QSize(12, 12))
-        self._custom_delete_btn.setToolTip("Supprimer cette stat")
+        self._custom_delete_btn.setToolTip(tr("Supprimer cette stat"))
         self._custom_delete_btn.setEnabled(False)
         self._custom_delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._custom_delete_btn.clicked.connect(self._on_custom_delete_click)
@@ -279,7 +280,7 @@ class StatsPanel(QWidget):
         footer = QHBoxLayout()
         footer.setContentsMargins(6, 2, 6, 2)
         footer.addStretch()
-        self._refresh_btn = QPushButton("Rafraichir")
+        self._refresh_btn = QPushButton(tr("Rafraichir"))
         self._refresh_btn.setObjectName("BtnRefresh")
         self._refresh_btn.setIcon(qta.icon("fa5s.sync-alt", color="#888888"))
         self._refresh_btn.setIconSize(QSize(12, 12))
@@ -327,10 +328,11 @@ class StatsPanel(QWidget):
             if delta is not None:
                 sign = "+" if delta >= 0 else ""
                 wc_str += f"  ({sign}{delta:,})"
-            text = f"{entry.title}\n{wc_str} mots"
+            mots_text = tr("mots")
+            text = f"{entry.title}\n{wc_str} {mots_text}"
             item = QListWidgetItem(text)
             item.setData(Qt.ItemDataRole.UserRole, entry.doc_id)
-            item.setToolTip(f"Double-clic pour ouvrir le graphique\n{entry.path}")
+            item.setToolTip(tr("Double-clic pour ouvrir le graphique\n{}").format(entry.path))
             self._docs_list.addItem(item)
         self._update_doc_delete_state()
 
@@ -343,7 +345,7 @@ class StatsPanel(QWidget):
             text = f"{entry.name}\n{entry.summary_value}"
             item = QListWidgetItem(text)
             item.setData(Qt.ItemDataRole.UserRole, entry.stat_id)
-            item.setToolTip(f"Double-clic pour ouvrir le graphique\n{entry.description}")
+            item.setToolTip(tr("Double-clic pour ouvrir le graphique\n{}").format(entry.description))
             self._custom_list.addItem(item)
         self._update_custom_delete_state()
 
@@ -391,7 +393,7 @@ class StatsPanel(QWidget):
 
     def _on_browse(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Sélectionner un document", "", "Documents Word (*.docx)"
+            self, tr("Sélectionner un document"), "", tr("Documents Word (*.docx)")
         )
         if path:
             self.doc_dropped.emit(path)

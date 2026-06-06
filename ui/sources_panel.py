@@ -24,6 +24,7 @@ import qtawesome as qta
 
 from core.source_store import SourceStore
 from ui.font_config import FontConfig
+from core.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class _DeleteSourceDialog(QDialog):
 
     def __init__(self, filename: str, nb_chunks: int, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Supprimer la source")
+        self.setWindowTitle(tr("Supprimer la source"))
         self.setModal(True)
         self.setFixedWidth(420)
         self.setStyleSheet(_build_dialog_dark_style(FontConfig.instance()))
@@ -52,21 +53,21 @@ class _DeleteSourceDialog(QDialog):
         layout.setSpacing(12)
 
         # Titre
-        title = QLabel(f'Supprimer "{filename}" ?')
+        title = QLabel(tr("Supprimer « {} » ?").format(filename))
         title.setObjectName("Title")
         title.setWordWrap(True)
         layout.addWidget(title)
 
         # Sous-titre
-        sub = QLabel("Ce document sera retire de la librairie.")
+        sub = QLabel(tr("Ce document sera retire de la librairie."))
         sub.setObjectName("Sub")
         layout.addWidget(sub)
 
         # Avertissement Bible
         bible_warn = QLabel(
-            "⚠️ Si vous supprimez aussi la memoire vectorielle,\n"
-            "les entrees de la Bible issues de ce document\n"
-            "(personnages, lieux, evenements...) seront egalement supprimees."
+            tr("⚠️ Si vous supprimez aussi la memoire vectorielle,\n"
+               "les entrees de la Bible issues de ce document\n"
+               "(personnages, lieux, evenements...) seront egalement supprimees.")
         )
         bible_warn.setObjectName("Sub")
         bible_warn.setWordWrap(True)
@@ -79,9 +80,9 @@ class _DeleteSourceDialog(QDialog):
         layout.addWidget(sep)
 
         # Case memoire FAISS
-        blocs_label = f"{nb_chunks} bloc" + ("s" if nb_chunks > 1 else "")
+        blocs_label = tr("{} bloc").format(nb_chunks) if nb_chunks <= 1 else tr("{} blocs").format(nb_chunks)
         self._chk_memory = QCheckBox(
-            f"Supprimer aussi la memoire vectorielle associee\n({blocs_label} FAISS lies a ce document)"
+            tr("Supprimer aussi la memoire vectorielle associee\n({} FAISS lies a ce document)").format(blocs_label)
         )
         self._chk_memory.setChecked(True)
         layout.addWidget(self._chk_memory)
@@ -90,7 +91,7 @@ class _DeleteSourceDialog(QDialog):
         btn_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Cancel
         )
-        delete_btn = btn_box.addButton("Supprimer", QDialogButtonBox.ButtonRole.AcceptRole)
+        delete_btn = btn_box.addButton(tr("Supprimer"), QDialogButtonBox.ButtonRole.AcceptRole)
         delete_btn.setProperty("danger", "true")
         delete_btn.style().unpolish(delete_btn)
         delete_btn.style().polish(delete_btn)
@@ -111,7 +112,7 @@ class _DeleteOrphanDialog(QDialog):
 
     def __init__(self, filename: str, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Supprimer la memoire")
+        self.setWindowTitle(tr("Supprimer la memoire"))
         self.setModal(True)
         self.setFixedWidth(420)
         self.setStyleSheet(_build_dialog_dark_style(FontConfig.instance()))
@@ -120,16 +121,16 @@ class _DeleteOrphanDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 16)
         layout.setSpacing(12)
 
-        title = QLabel(f'Supprimer la memoire de "{filename}" ?')
+        title = QLabel(tr("Supprimer la memoire de « {} » ?").format(filename))
         title.setObjectName("Title")
         title.setWordWrap(True)
         layout.addWidget(title)
 
         sub = QLabel(
-            "Ce document est conserve uniquement en memoire vectorielle (FAISS).\n"
-            "Cette suppression est definitive et supprimera egalement\n"
-            "les entrees de la Bible issues de ce document\n"
-            "(personnages, lieux, evenements...)."
+            tr("Ce document est conserve uniquement en memoire vectorielle (FAISS).\n"
+               "Cette suppression est definitive et supprimera egalement\n"
+               "les entrees de la Bible issues de ce document\n"
+               "(personnages, lieux, evenements...).")
         )
         sub.setObjectName("Sub")
         sub.setWordWrap(True)
@@ -141,7 +142,7 @@ class _DeleteOrphanDialog(QDialog):
         layout.addWidget(sep)
 
         btn_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
-        delete_btn = btn_box.addButton("Supprimer", QDialogButtonBox.ButtonRole.AcceptRole)
+        delete_btn = btn_box.addButton(tr("Supprimer"), QDialogButtonBox.ButtonRole.AcceptRole)
         delete_btn.setProperty("danger", "true")
         delete_btn.style().unpolish(delete_btn)
         delete_btn.style().polish(delete_btn)
@@ -258,7 +259,7 @@ class SourcesPanel(QWidget):
         layout.setContentsMargins(0, 8, 0, 0)
         layout.setSpacing(4)
 
-        self._empty_label = QLabel("Aucun document ingere.\n\nUtilisez l'icone Sources\npour importer un .docx.")
+        self._empty_label = QLabel(tr("Aucun document ingere.\n\nUtilisez l'icone Sources\npour importer un .docx."))
         self._empty_label.setObjectName("EmptyLabel")
         self._empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_label.setWordWrap(True)
@@ -268,7 +269,7 @@ class SourcesPanel(QWidget):
         layout.addWidget(self._list)
 
         # Bouton Importer
-        import_btn = QPushButton("+ Importer un document .docx")
+        import_btn = QPushButton(tr("+ Importer un document .docx"))
         import_btn.setObjectName("SrcBtn")
         import_btn.clicked.connect(self.import_requested)
         import_layout = QHBoxLayout()
@@ -280,21 +281,21 @@ class SourcesPanel(QWidget):
         btn_row.setSpacing(6)
         btn_row.setContentsMargins(8, 4, 8, 8)
 
-        self._reingest_btn = QPushButton("Re-ingerer")
+        self._reingest_btn = QPushButton(tr("Re-ingerer"))
         self._reingest_btn.setObjectName("SrcBtn")
         self._reingest_btn.setEnabled(False)
         self._reingest_btn.clicked.connect(self._on_reingest)
 
-        self._mute_btn = QPushButton("Sourdine")
+        self._mute_btn = QPushButton(tr("Sourdine"))
         self._mute_btn.setIcon(qta.icon("fa5s.volume-mute", color="white"))
         self._mute_btn.setObjectName("SrcBtn")
         self._mute_btn.setToolTip(
-            "Met ce document en sourdine : il reste en mémoire mais\n"
-            "n'est plus injecté dans le contexte des conversations."
+            tr("Met ce document en sourdine : il reste en mémoire mais\n"
+               "n'est plus injecté dans le contexte des conversations.")
         )
         self._mute_btn.clicked.connect(self._on_mute)
 
-        self._remove_btn = QPushButton("Supprimer")
+        self._remove_btn = QPushButton(tr("Supprimer"))
         self._remove_btn.setObjectName("SrcBtnDanger")
         self._remove_btn.setEnabled(False)
         self._remove_btn.clicked.connect(self._on_remove)
@@ -313,7 +314,7 @@ class SourcesPanel(QWidget):
         sep.setStyleSheet("background-color: #3e3e42;")
         layout.addWidget(sep)
 
-        edit_header = QLabel("Documents edites")
+        edit_header = QLabel(tr("Documents edites"))
         edit_header.setObjectName("EmptyLabel")
         edit_header.setAlignment(Qt.AlignmentFlag.AlignLeft)
         edit_header.setStyleSheet("color: #888888; font-size: 11px; padding: 4px 8px 2px 8px;")
@@ -321,7 +322,7 @@ class SourcesPanel(QWidget):
 
         self._edit_list = QListWidget()
         self._edit_list.setMaximumHeight(160)
-        self._edit_list.setToolTip("Double-clic pour rouvrir un document en mode edition")
+        self._edit_list.setToolTip(tr("Double-clic pour rouvrir un document en mode edition"))
         self._edit_list.itemDoubleClicked.connect(self._on_edit_doc_double_clicked)
         self._edit_list.currentItemChanged.connect(
             lambda cur, _: self._edit_delete_btn.setEnabled(cur is not None)
@@ -331,15 +332,15 @@ class SourcesPanel(QWidget):
         edit_btn_row = QHBoxLayout()
         edit_btn_row.setContentsMargins(8, 2, 8, 6)
         edit_btn_row.addStretch()
-        self._edit_delete_btn = QPushButton("Supprimer")
+        self._edit_delete_btn = QPushButton(tr("Supprimer"))
         self._edit_delete_btn.setObjectName("SrcBtnDanger")
         self._edit_delete_btn.setEnabled(False)
-        self._edit_delete_btn.setToolTip("Supprimer definitivement ce document edite")
+        self._edit_delete_btn.setToolTip(tr("Supprimer definitivement ce document edite"))
         self._edit_delete_btn.clicked.connect(self._on_edit_doc_delete)
         edit_btn_row.addWidget(self._edit_delete_btn)
         layout.addLayout(edit_btn_row)
 
-        self._edit_empty_lbl = QLabel("Aucun document edite.")
+        self._edit_empty_lbl = QLabel(tr("Aucun document edite."))
         self._edit_empty_lbl.setObjectName("EmptyLabel")
         self._edit_empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._edit_empty_lbl.hide()
@@ -347,7 +348,7 @@ class SourcesPanel(QWidget):
 
     def _setup_drop_overlay(self) -> None:
         """Cree le label overlay affiche pendant un glisser-deposer valide."""
-        self._drop_overlay = QLabel("↓  Deposer le .docx ici", self)
+        self._drop_overlay = QLabel(tr("↓  Deposer le .docx ici"), self)
         self._drop_overlay.setObjectName("DropOverlay")
         self._drop_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._drop_overlay.hide()
@@ -426,11 +427,11 @@ class SourcesPanel(QWidget):
             ts = s.get("ingested_at", "")[:16].replace("T", " ")
             nb = s.get("nb_chunks", "?")
             if is_orphan:
-                item.setText(f"{s['filename']}\n{ts}  •  mémoire FAISS uniquement")
+                item.setText(tr("{}\n{}  •  mémoire FAISS uniquement").format(s['filename'], ts))
                 item.setToolTip(
-                    "Ce document a ete retire de la librairie mais\n"
-                    "sa memoire vectorielle (FAISS) est conservee.\n"
-                    "Cliquez Supprimer pour effacer aussi la memoire."
+                    tr("Ce document a ete retire de la librairie mais\n"
+                       "sa memoire vectorielle (FAISS) est conservee.\n"
+                       "Cliquez Supprimer pour effacer aussi la memoire.")
                 )
                 font = QFont()
                 font.setItalic(True)
@@ -439,7 +440,8 @@ class SourcesPanel(QWidget):
                 item.setIcon(qta.icon("fa5s.unlink", color="#666666"))
             else:
                 is_bible = s.get("bible_source", True)
-                item.setText(f"{s['filename']}\n{ts}  •  {nb} blocs")
+                blocs_text = tr("{} bloc").format(nb) if nb <= 1 else tr("{} blocs").format(nb)
+                item.setText(tr("{}\n{}  •  {}").format(s['filename'], ts, blocs_text))
                 item.setIcon(qta.icon("fa5s.journal-whills" if is_bible else "fa5s.archive", color="#4ec9b0" if is_bible else "#858585"))
             self._list.addItem(item)
 
@@ -491,20 +493,20 @@ class SourcesPanel(QWidget):
             sid = current.data(Qt.ItemDataRole.UserRole)
             try:
                 is_muted = self._store.get(sid).get("muted", False)
-                self._mute_btn.setText("Activer" if is_muted else "Sourdine")
+                self._mute_btn.setText(tr("Activer") if is_muted else tr("Sourdine"))
                 self._mute_btn.setIcon(qta.icon("fa5s.volume-up" if is_muted else "fa5s.volume-mute", color="white"))
                 if is_muted:
-                    self._mute_btn.setToolTip("Document en sourdine : il n'est plus lu par l'IA. Cliquez pour l'activer.")
+                    self._mute_btn.setToolTip(tr("Document en sourdine : il n'est plus lu par l'IA. Cliquez pour l'activer."))
                 else:
-                    self._mute_btn.setToolTip("Document active : il est lu par l'IA. Cliquez pour le mettre en sourdine.")
+                    self._mute_btn.setToolTip(tr("Document active : il est lu par l'IA. Cliquez pour le mettre en sourdine."))
             except KeyError:
-                self._mute_btn.setText("Sourdine")
+                self._mute_btn.setText(tr("Sourdine"))
                 self._mute_btn.setIcon(qta.icon("fa5s.volume-mute", color="white"))
-                self._mute_btn.setToolTip("Document active : il est lu par l'IA. Cliquez pour le mettre en sourdine.")
+                self._mute_btn.setToolTip(tr("Document active : il est lu par l'IA. Cliquez pour le mettre en sourdine."))
         else:
-            self._mute_btn.setText("Sourdine")
+            self._mute_btn.setText(tr("Sourdine"))
             self._mute_btn.setIcon(qta.icon("fa5s.volume-mute", color="white"))
-            self._mute_btn.setToolTip("Met ce document en sourdine.")
+            self._mute_btn.setToolTip(tr("Met ce document en sourdine."))
         self._remove_btn.setEnabled(has)
 
     def _current_source(self) -> dict | None:
@@ -525,8 +527,8 @@ class SourcesPanel(QWidget):
         if not Path(path).exists():
             QMessageBox.warning(
                 self,
-                "Fichier introuvable",
-                f"Le fichier n'existe plus a cet emplacement :\n{path}",
+                tr("Fichier introuvable"),
+                tr("Le fichier n'existe plus a cet emplacement :\n{}").format(path),
             )
             return
         self.reingest_requested.emit(src["source_id"], path)

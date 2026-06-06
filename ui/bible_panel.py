@@ -22,6 +22,7 @@ import qtawesome as qta
 from core.bible_db import BibleDB
 from core.project_types import get_category, DEFAULT_CATEGORIES
 from ui.font_config import FontConfig
+from core.i18n import tr
 
 
 def _build_table_style(fc: FontConfig) -> str:
@@ -85,7 +86,7 @@ class _BibleTableWidget(QWidget):
         super().__init__(parent)
         self._table_key = table_key
         self._col_headers = col_headers
-        self._empty_hint_text = empty_hint or f"Aucune entrée dans « {table_key} »."
+        self._empty_hint_text = empty_hint or tr("Aucune entrée dans « {} ».").format(table_key)
         self._bible_db: BibleDB | None = None
         self.setStyleSheet(_build_table_style(FontConfig.instance()))
         self._setup_ui()
@@ -106,7 +107,7 @@ class _BibleTableWidget(QWidget):
 
         self._table = QTableWidget(0, 3)
         self._table.setHorizontalHeaderLabels(
-            [self._col_headers[0], self._col_headers[1] if len(self._col_headers) > 1 else "Détail", ""]
+            [tr(self._col_headers[0]), tr(self._col_headers[1]) if len(self._col_headers) > 1 else tr("Détail"), ""]
         )
         self._table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.ResizeToContents
@@ -131,7 +132,7 @@ class _BibleTableWidget(QWidget):
         add_bar = QHBoxLayout()
         add_bar.setContentsMargins(8, 4, 8, 4)
         add_bar.addStretch()
-        self._add_btn = QPushButton(" Ajouter")
+        self._add_btn = QPushButton(tr(" Ajouter"))
         self._add_btn.setObjectName("AddEntryBtn")
         self._add_btn.setIcon(qta.icon("fa5s.plus", color="#888888"))
         self._add_btn.clicked.connect(self._add_entry)
@@ -176,8 +177,8 @@ class _BibleTableWidget(QWidget):
             del_btn.setFixedSize(24, 24)
             del_btn.setEnabled(not is_protected)
             del_btn.setToolTip(
-                "Entrée protégée (mémoire IA)" if is_protected
-                else f"Supprimer « {label} »"
+                tr("Entrée protégée (mémoire IA)") if is_protected
+                else tr("Supprimer « {} »").format(label)
             )
             captured_label = label
             del_btn.clicked.connect(lambda _, lbl=captured_label: self._delete_row(lbl))
@@ -190,8 +191,8 @@ class _BibleTableWidget(QWidget):
             return
         reply = QMessageBox.question(
             self,
-            "Supprimer l'entrée",
-            f"Supprimer « {label} » de la Bible ?\nCette action est irréversible.",
+            tr("Supprimer l'entrée"),
+            tr("Supprimer « {} » de la Bible ?\nCette action est irréversible.").format(label),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
             QMessageBox.StandardButton.Cancel,
         )
@@ -210,7 +211,7 @@ class _BibleTableWidget(QWidget):
         self._edit_entry(label_item.text(), content_item.text() if content_item else "")
 
     def _entry_dialog(self, title: str,
-                      label_init: str = "", content_init: str = "") -> tuple | None:
+                       label_init: str = "", content_init: str = "") -> tuple | None:
         """Ouvre un dialog add/edit. Retourne (label, content) ou None si annulé."""
         dlg = QDialog(self)
         dlg.setWindowTitle(title)
@@ -219,12 +220,12 @@ class _BibleTableWidget(QWidget):
         form.setSpacing(8)
         form.setContentsMargins(12, 12, 12, 12)
         label_edit = QLineEdit(label_init)
-        label_edit.setPlaceholderText("Ex : Elara, Château de Verre, ...")
-        form.addRow("Label :", label_edit)
+        label_edit.setPlaceholderText(tr("Ex : Elara, Château de Verre, ..."))
+        form.addRow(tr("Label :"), label_edit)
         content_edit = QTextEdit(content_init)
         content_edit.setMinimumHeight(90)
-        content_edit.setPlaceholderText("Description détaillée...")
-        form.addRow("Contenu :", content_edit)
+        content_edit.setPlaceholderText(tr("Description détaillée..."))
+        form.addRow(tr("Contenu :"), content_edit)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -241,7 +242,7 @@ class _BibleTableWidget(QWidget):
     def _add_entry(self) -> None:
         if self._bible_db is None:
             return
-        result = self._entry_dialog(f"Ajouter dans \u00ab\u00a0{self._table_key}\u00a0\u00bb")
+        result = self._entry_dialog(tr("Ajouter dans « {} »").format(tr(self._table_key)))
         if result:
             label, content = result
             self._bible_db.upsert(self._table_key, label, content, source_chunk="manual")
@@ -252,7 +253,7 @@ class _BibleTableWidget(QWidget):
         if self._bible_db is None:
             return
         result = self._entry_dialog(
-            f"Modifier \u00ab\u00a0{old_label}\u00a0\u00bb",
+            tr("Modifier « {} »").format(old_label),
             label_init=old_label,
             content_init=old_content,
         )
@@ -263,7 +264,6 @@ class _BibleTableWidget(QWidget):
             self._bible_db.upsert(self._table_key, new_label, new_content, source_chunk="manual")
             self.refresh(self._bible_db)
             self.entry_changed.emit()
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BiblePanel
@@ -303,18 +303,18 @@ class BiblePanel(QWidget):
             cat = get_category(key)
             if cat is None:
                 cat = {
-                    "tab_label":   key.capitalize(),
+                    "tab_label":   tr(key.capitalize()),
                     "col_headers": ["Label", "Contenu"],
-                    "empty_hint":  f"Aucune entrée dans « {key} ».",
+                    "empty_hint":  tr("Aucune entrée dans « {} ».").format(key),
                 }
             w = _BibleTableWidget(
                 table_key=key,
                 col_headers=cat["col_headers"],
-                empty_hint=cat["empty_hint"],
+                empty_hint=tr(cat["empty_hint"]),
             )
             w.entry_changed.connect(self.bible_manually_changed)
             self._tab_widgets[key] = w
-            idx = self._tabs.addTab(w, cat["tab_label"])
+            idx = self._tabs.addTab(w, tr(cat["tab_label"]))
             # Icône qtawesome sur l'onglet
             icon_name = _CAT_ICONS.get(key)
             if icon_name:

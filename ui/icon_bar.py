@@ -10,6 +10,7 @@ Chaque clic envoie le signal icon_clicked(icon_id, is_active).
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 import qtawesome as qta
+from core.i18n import tr
 
 # (identifiant, nom_icône_fa, tooltip)
 ICONS_TOP = [
@@ -47,14 +48,14 @@ class IconBar(QWidget):
         layout.addSpacing(30)  # marge haute pour dégager la barre de titre système
 
         for icon_id, emoji, tooltip in ICONS_TOP:
-            btn = self._make_button(icon_id, emoji, tooltip)
+            btn = self._make_button(icon_id, emoji, tr(tooltip))
             layout.addWidget(btn)
 
         layout.addStretch()
 
         # Paramètres toujours en bas
         icon_id, emoji, tooltip = ICON_BOTTOM
-        btn = self._make_button(icon_id, emoji, tooltip)
+        btn = self._make_button(icon_id, emoji, tr(tooltip))
         layout.addWidget(btn)
         layout.addSpacing(4)
 

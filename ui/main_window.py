@@ -59,6 +59,7 @@ from core.annotation_store import AnnotationStore
 from core.ghost_scanner import GhostScanner
 from core.scroll_tracker import ScrollTracker
 from core.ghost_matcher import match_annotations
+from core.i18n import tr
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ class MainWindow(QMainWindow):
         self._session = session
         author = session["author"]["name"]
         project = session["project"]["name"]
-        self.setWindowTitle(f"EUGENIA — {project}  ({author})")
+        self.setWindowTitle(tr("EUGENIA — {}  ({})").format(project, author))
         self.setWindowIcon(QIcon("assets/logo.png"))
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         self.setMinimumSize(1200, 700)
@@ -492,8 +493,8 @@ class MainWindow(QMainWindow):
         if self._archiviste:
             self._archiviste.relational().memorize_direct(text_to_memorize)
             self.ai_panel.append_injected(
-                "Archiviste", 
-                f"Information mémorisée : {text_to_memorize[:80]}..."
+                tr("Archiviste"), 
+                tr("Information mémorisée : {}...").format(text_to_memorize[:80])
             )
             logger.info("[MEM:WRITE] Auto-mémorisation déclenchée par EUGENIA : %s", text_to_memorize[:60])
 
@@ -946,14 +947,14 @@ class MainWindow(QMainWindow):
         """
         if not note:
             self.ai_panel.append_injected(
-                "Ghost Writer", "(/annotation) Note vide — format : /annotation [texte de la note]"
+                tr("Ghost Writer"), tr("(/annotation) Note vide — format : /annotation [texte de la note]")
             )
             return
 
         try:
             anchor = self._ghost_current_anchor()
         except ValueError as exc:
-            self.ai_panel.append_injected("Ghost Writer", str(exc))
+            self.ai_panel.append_injected(tr("Ghost Writer"), tr(str(exc)))
             return
 
         document = self._ghost_document_name()
@@ -961,8 +962,8 @@ class MainWindow(QMainWindow):
 
         ann = self._annotation_store.add(document, anchor, label, note)
         self.ai_panel.append_injected(
-            "Ghost Writer",
-            f"🟡 Annotation créée sur \u00ab {anchor[:50]}… \u00bb — « {label} \u00bb",
+            tr("Ghost Writer"),
+            tr("🟡 Annotation créée sur \u00ab {}… \u00bb — \u00ab {} \u00bb").format(anchor[:50], label),
         )
         logger.info(
             "GhostWriter — annotation %d créée pour document '%s' : %r",
@@ -1050,11 +1051,11 @@ class MainWindow(QMainWindow):
         archiviste_cfg = resolve_engine_config(cfg["ia_archiviste"])
         if not archiviste_cfg.get("api_key"):
             self.ai_panel.append_injected(
-                "Ghost Writer", "⚠️ Archiviste non configuré — impossible de générer l'annotation."
+                tr("Ghost Writer"), tr("⚠️ Archiviste non configuré — impossible de générer l'annotation.")
             )
             return
 
-        self.ai_panel.append_injected("Ghost Writer", "⏳ Rédaction de l'annotation en cours…")
+        self.ai_panel.append_injected(tr("Ghost Writer"), tr("⏳ Rédaction de l'annotation en cours…"))
 
         worker = AnnotationGenerator(
             config=archiviste_cfg,
@@ -1063,7 +1064,7 @@ class MainWindow(QMainWindow):
         )
         worker.annotation_ready.connect(self._on_annotation_generated)
         worker.error_occurred.connect(
-            lambda msg: self.ai_panel.append_injected("Ghost Writer", f"❌ {msg}")
+            lambda msg: self.ai_panel.append_injected(tr("Ghost Writer"), tr("❌ {}").format(msg))
         )
         self._annotation_worker = worker
         worker.start()
@@ -1073,7 +1074,7 @@ class MainWindow(QMainWindow):
         try:
             anchor = self._ghost_current_anchor()
         except ValueError as exc:
-            self.ai_panel.append_injected("Ghost Writer", str(exc))
+            self.ai_panel.append_injected(tr("Ghost Writer"), tr(str(exc)))
             return
 
         document = self._ghost_document_name()
@@ -1083,8 +1084,8 @@ class MainWindow(QMainWindow):
             self._ghost_overlay.scan_requested.emit()
 
         self.ai_panel.append_injected(
-            "Ghost Writer",
-            f"🟡 Annotation créée : **{label}**\n{note}",
+            tr("Ghost Writer"),
+            tr("🟡 Annotation créée : **{}**\n{}").format(label, note),
         )
         logger.info(
             "GhostWriter — annotation %d générée par Archiviste pour document '%s' : %r",
@@ -1185,7 +1186,7 @@ class MainWindow(QMainWindow):
 
         screen = self.screen()
         notif = ClipboardNotification(
-            text=f"⚠ Erreur OCR Ghost Writer\n{message}",
+            text=tr("⚠ Erreur OCR Ghost Writer\n{}").format(message),
             screen=screen,
         )
         notif.show()
@@ -1420,7 +1421,7 @@ class MainWindow(QMainWindow):
         if self._engine:
             self._engine.inject(text, label="Extrait partagé via presse-papier")
         # Affichage dans le panneau conversation
-        self.ai_panel.append_injected("Extrait", text)
+        self.ai_panel.append_injected(tr("Extrait"), text)
         # Archiviste : analyse et stockage dans la Bible (async)
         if self._archiviste:
             self._archiviste.ingest_text(text, source_id="clipboard")
@@ -1459,14 +1460,14 @@ class MainWindow(QMainWindow):
             title = stripped[9:].strip()
             if not title:
                 self.ai_panel.append_injected(
-                    "EUGENIA", "(/edition) Precisez le titre du document apres /edition."
+                    tr("EUGENIA"), tr("(/edition) Precisez le titre du document apres /edition.")
                 )
                 self.ai_panel.set_busy(False)
                 return
             doc = self._edit_store.find_by_title(title)
             if doc is None:
                 self.ai_panel.append_injected(
-                    "EUGENIA", f"(/edition) Document introuvable : {title!r}."
+                    tr("EUGENIA"), tr("(/edition) Document introuvable : {}.").format(title)
                 )
                 self.ai_panel.set_busy(False)
                 return
@@ -1479,13 +1480,13 @@ class MainWindow(QMainWindow):
             query = stripped[5:].strip()
             if not query:
                 self.ai_panel.append_injected(
-                    "EUGENIA", "(/web) Precisez votre recherche apres /web."
+                    tr("EUGENIA"), tr("(/web) Precisez votre recherche apres /web.")
                 )
                 self.ai_panel.set_busy(False)
                 return
             if self._engine is None:
                 self.ai_panel.append_injected(
-                    "EUGENIA", "(/web) Moteur IA non configure."
+                    tr("EUGENIA"), tr("(/web) Moteur IA non configure.")
                 )
                 self.ai_panel.set_busy(False)
                 return
@@ -1495,7 +1496,7 @@ class MainWindow(QMainWindow):
             max_results = int(cfg.get("max_results", 5))
             logger.info("[WEB] commande /web -- provider=%s | query=%s", provider, query[:60])
             self.ai_panel.append_injected(
-                "EUGENIA", f"Recherche web ({provider}) : {query}…"
+                tr("EUGENIA"), tr("Recherche web ({}) : {}…").format(provider, query)
             )
             worker = WebSearchWorker(provider, api_key, query, max_results)
             self._web_search_worker = worker
@@ -1534,7 +1535,7 @@ class MainWindow(QMainWindow):
                 self._relational_scanner.run_pending()
             else:
                 self.ai_panel.append_injected(
-                    "EUGENIA", "(/mem) Aucun contenu a memoriser ou systeme non configure.)"
+                    tr("EUGENIA"), tr("(/mem) Aucun contenu a memoriser ou systeme non configure.)")
                 )
             self.ai_panel.set_busy(False)
             return
@@ -1543,7 +1544,7 @@ class MainWindow(QMainWindow):
         if stripped.lower() == "/journal ego":
             journal = self._ego_manager.get_journal()
             if not journal:
-                self.ai_panel.append_injected("EUGENIA", "(/journal ego) Le journal d'introspection est vide.")
+                self.ai_panel.append_injected(tr("EUGENIA"), tr("(/journal ego) Le journal d'introspection est vide."))
                 self.ai_panel.set_busy(False)
                 return
             
@@ -1554,21 +1555,21 @@ class MainWindow(QMainWindow):
             dump = "\n".join(lines)
             # Inject into system prompt
             self._engine.inject_context_note(f"Journal d'Introspection Recent :\n{dump}")
-            self.ai_panel.append_injected("Archiviste", "(/journal ego) Journal injecte dans le contexte de l'IA.")
+            self.ai_panel.append_injected(tr("Archiviste"), tr("(/journal ego) Journal injecte dans le contexte de l'IA."))
             self.ai_panel.set_busy(False)
             return
 
         if stripped.lower() == "/bible":
             if self._archiviste is None:
                 self.ai_panel.append_injected(
-                    "EUGENIA", "(/bible) Archiviste non configure."
+                    tr("EUGENIA"), tr("(/bible) Archiviste non configure.")
                 )
                 self.ai_panel.set_busy(False)
                 return
             all_entries = self._archiviste.bible_db.get_all_tables()
             if not all_entries:
                 self.ai_panel.append_injected(
-                    "EUGENIA", "(/bible) La Bible est vide."
+                    tr("EUGENIA"), tr("(/bible) La Bible est vide.")
                 )
                 self.ai_panel.set_busy(False)
                 return
@@ -1584,8 +1585,8 @@ class MainWindow(QMainWindow):
                 f"Bible complete du projet :\n{dump}"
             )
             self.ai_panel.append_injected(
-                "Archiviste",
-                f"Bible injectee ({len(all_entries)} entrees) dans le prochain message.",
+                tr("Archiviste"),
+                tr("Bible injectee ({} entrees) dans le prochain message.").format(len(all_entries)),
             )
             logger.info("[BIBLE:INJECT] dump complet : %d entrees", len(all_entries))
             self.ai_panel.set_busy(False)
@@ -1597,12 +1598,12 @@ class MainWindow(QMainWindow):
             if mem_text and self._archiviste:
                 self._archiviste.ingest_text(mem_text, source_id="mem_bible")
                 self.ai_panel.append_injected(
-                    "Archiviste", f"Envoye a la Bible : {mem_text[:80]}"
+                    tr("Archiviste"), tr("Envoye a la Bible : {}").format(mem_text[:80])
                 )
                 logger.info("[MEM:WRITE] /mem_bible -> Bible : %s", mem_text[:60])
             else:
                 self.ai_panel.append_injected(
-                    "EUGENIA", "(/mem_bible) Aucun contenu ou Archiviste non configure."
+                    tr("EUGENIA"), tr("(/mem_bible) Aucun contenu ou Archiviste non configure.")
                 )
             self.ai_panel.set_busy(False)
             return
@@ -1619,9 +1620,9 @@ class MainWindow(QMainWindow):
             stat_request = stripped[6:].strip()
             if not stat_request:
                 self.ai_panel.append_injected(
-                    "EUGENIA",
-                    "(/stat) Décris la statistique souhaitée après /stat.\n"
-                    "Exemple : /stat fais un camembert des catégories sociales de ma famille",
+                    tr("EUGENIA"),
+                    tr("(/stat) Décris la statistique souhaitée après /stat.\n"
+                    "Exemple : /stat fais un camembert des catégories sociales de ma famille"),
                 )
                 self.ai_panel.set_busy(False)
                 return
@@ -1751,7 +1752,7 @@ class MainWindow(QMainWindow):
                     f"[FICHIER JOINT : {attachment['filename']}]\n{content_preview}"
                 )
                 self.ai_panel.append_injected(
-                    "Fichier joint",
+                    tr("Fichier joint"),
                     attachment["filename"],
                 )
                 logger.info(
@@ -1761,7 +1762,7 @@ class MainWindow(QMainWindow):
             elif attachment["type"] == "image":
                 self._engine.queue_image(attachment["b64"], attachment["mime"])
                 self.ai_panel.append_injected(
-                    "Image jointe",
+                    tr("Image jointe"),
                     attachment["filename"],
                 )
                 logger.info(
@@ -1784,7 +1785,7 @@ class MainWindow(QMainWindow):
                         f"Voici les résumés des dernières sessions. Sers-t-en pour te rafraîchir la mémoire et assurer la continuité de la conversation :\n\n"
                         f"{full_context}"
                     )
-                    self.ai_panel.append_injected("Mémoire", f"Archives des {len(recents)} dernières sessions injectées.")
+                    self.ai_panel.append_injected(tr("Mémoire"), tr("Archives des {} dernières sessions injectées.").format(len(recents)))
                     logger.info("[SESSION:RECALL] %d archives injectées suite au trigger naturel.", len(recents))
 
         self._pending_send_text = text
@@ -1851,15 +1852,15 @@ class MainWindow(QMainWindow):
     def _on_mem_memorized(self, text: str, target: str, added: int) -> None:
         """Feedback visible dans le chat apres une commande /mem."""
         if target == "doublon":
-            msg = f"(deja en memoire : {text[:80]})"
+            msg = tr("(deja en memoire : {})").format(text[:80])
         elif target == "travail":
-            msg = f"Memorise dans la memoire de travail : {text[:80]}"
+            msg = tr("Memorise dans la memoire de travail : {}").format(text[:80])
         else:
             if added:
-                msg = f"Memorise (memoire relationnelle) : {text[:80]}"
+                msg = tr("Memorise (memoire relationnelle) : {}").format(text[:80])
             else:
-                msg = f"(deja en memoire relationnelle : {text[:80]})"
-        self.ai_panel.append_injected("Archiviste", msg)
+                msg = tr("(deja en memoire relationnelle : {})").format(text[:80])
+        self.ai_panel.append_injected(tr("Archiviste"), msg)
 
     def _on_context_note_ready(self, note: str):
         """
@@ -2070,14 +2071,14 @@ class MainWindow(QMainWindow):
             self._engine.inject_context_note(block)
             logger.info("[WEB] bloc resultat injecte (%d chars)", len(block))
         else:
-            self.ai_panel.append_injected("EUGENIA", "(Aucun resultat web trouve.)")
+            self.ai_panel.append_injected(tr("EUGENIA"), tr("(Aucun resultat web trouve.)"))
         self._engine.send(query, optimized_history=self._build_optimized_history())
 
     def _on_web_search_error(self, err: str, query: str) -> None:
         """Erreur de recherche web : avertir l'utilisateur et envoyer quand meme."""
         logger.error("[WEB] erreur recherche : %s", err)
         self.ai_panel.append_injected(
-            "EUGENIA", f"(Recherche web echouee : {err})"
+            tr("EUGENIA"), tr("(Recherche web echouee : {})").format(err)
         )
         if self._engine is not None:
             self._engine.send(query, optimized_history=self._build_optimized_history())
@@ -2096,8 +2097,8 @@ class MainWindow(QMainWindow):
         self._edit_panel.load_document(doc)
         self._center_stack.setCurrentIndex(1)
         self.ai_panel.append_injected(
-            "Edition",
-            f"Mode edition ouvert — {doc.title!r}. Ecrivez vos instructions dans le chat.",
+            tr("Edition"),
+            tr("Mode edition ouvert — {}. Ecrivez vos instructions dans le chat.").format(doc.title),
         )
         logger.info("[EDIT] mode edition ouvert — id=%s titre=%s", doc.doc_id, doc.title)
 
@@ -2112,7 +2113,7 @@ class MainWindow(QMainWindow):
         self.context_panel.sources_panel.refresh_edit_docs(
             self._edit_store.list_docs()
         )
-        self.ai_panel.append_injected("Edition", "Mode edition ferme.")
+        self.ai_panel.append_injected(tr("Edition"), tr("Mode edition ferme."))
 
     def _inject_edit_mode_context(self) -> None:
         """Injecte l'instruction mode edition + contenu courant avant engine.send()."""
@@ -2189,7 +2190,7 @@ class MainWindow(QMainWindow):
             self.ai_panel.on_ai_response(comment)
             self._record_ai_response(comment)
         elif edit_content:
-            self.ai_panel.append_injected("Edition", "(Document mis a jour)")
+            self.ai_panel.append_injected(tr("Edition"), tr("(Document mis a jour)"))
             self.ai_panel.set_busy(False)
 
         self._reset_ego_heartbeat()
@@ -2201,7 +2202,7 @@ class MainWindow(QMainWindow):
             return
         from pathlib import Path as _Path
         self._edit_store.export_to_file(self._current_edit_doc, _Path(path))
-        self.ai_panel.append_injected("Edition", f"Document exporte : {path}")
+        self.ai_panel.append_injected(tr("Edition"), tr("Document exporte : {}").format(path))
         logger.info("[EDIT] export -> %s", path)
 
     def _on_edit_ai_command(self, cmd: str, selection: str) -> None:
@@ -2212,7 +2213,7 @@ class MainWindow(QMainWindow):
             f"{cmd}\n\n"
             f"Passage cible :\n---\n{selection}\n---"
         )
-        self.ai_panel.append_injected("Edition", f"Commande rapide : {cmd}")
+        self.ai_panel.append_injected(tr("Edition"), tr("Commande rapide : {}").format(cmd))
         self._inject_edit_mode_context()
         self._engine.send(prompt, optimized_history=self._build_optimized_history())
 
@@ -2220,7 +2221,7 @@ class MainWindow(QMainWindow):
         """Ouvre un document edite existant depuis le SourcesPanel."""
         doc = self._edit_store.get_doc(doc_id)
         if doc is None:
-            self.ai_panel.append_injected("Edition", f"Document introuvable (id={doc_id})")
+            self.ai_panel.append_injected(tr("Edition"), tr("Document introuvable (id={})").format(doc_id))
             return
         self._enter_edit_mode(doc=doc)
 
@@ -2245,7 +2246,7 @@ class MainWindow(QMainWindow):
             wc = count_words_docx(path)
         except Exception as exc:
             logger.error("[STATS] erreur comptage mots '%s' : %s", path, exc)
-            self.ai_panel.append_injected("EUGENIA", f"Impossible de lire ce fichier : {exc}")
+            self.ai_panel.append_injected(tr("EUGENIA"), tr("Impossible de lire ce fichier : {}").format(exc))
             return
 
         existing = self._stats_store.get_doc_stat_by_path(path)
@@ -2254,7 +2255,7 @@ class MainWindow(QMainWindow):
         if existing is None:
             # Première injection : proposer une baseline
             dlg = QDialog(self)
-            dlg.setWindowTitle("Première analyse")
+            dlg.setWindowTitle(tr("Première analyse"))
             dlg.setModal(True)
             dlg.setFixedWidth(380)
             layout = QVBoxLayout(dlg)
@@ -2265,14 +2266,14 @@ class MainWindow(QMainWindow):
                 f"<span style='color:#888'>{wc:,} mots détectés.</span>"
             ))
             layout.addWidget(QLabel(
-                "Connaissez-vous votre objectif de mots par jour ?\n"
-                "(Laissez 0 si inconnu — vous pourrez le définir plus tard.)"
+                tr("Connaissez-vous votre objectif de mots par jour ?\n"
+                "(Laissez 0 si inconnu — vous pourrez le définir plus tard.)")
             ))
             spin = QSpinBox()
             spin.setRange(0, 50000)
             spin.setSingleStep(100)
             spin.setValue(0)
-            spin.setSuffix(" mots/jour")
+            spin.setSuffix(tr(" mots/jour"))
             layout.addWidget(spin)
             btns = QDialogButtonBox(
                 QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -2297,10 +2298,10 @@ class MainWindow(QMainWindow):
         delta = entry.word_count_delta
         if delta is not None:
             sign = "+" if delta >= 0 else ""
-            msg = f"Statistiques mises à jour pour « {title} » : {wc:,} mots ({sign}{delta:,} depuis la dernière session)."
+            msg = tr("Statistiques mises à jour pour « {} » : {} mots ({}{} depuis la dernière session).").format(title, wc, sign, delta)
         else:
-            msg = f"Statistiques initialisées pour « {title} » : {wc:,} mots."
-        self.ai_panel.append_injected("Archiviste", msg)
+            msg = tr("Statistiques initialisées pour « {} » : {} mots.").format(title, wc)
+        self.ai_panel.append_injected(tr("Archiviste"), msg)
 
     def _on_stat_refresh(self) -> None:
         """Rafraîchit l'affichage du StatsPanel depuis le store."""
@@ -2339,8 +2340,8 @@ class MainWindow(QMainWindow):
             name = entry.name if entry else item_id
 
         reply = QMessageBox.question(
-            self, "Supprimer",
-            f"Supprimer « {name} » et toutes ses statistiques ?",
+            self, tr("Supprimer"),
+            tr("Supprimer « {} » et toutes ses statistiques ?").format(name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
         )
         if reply != QMessageBox.StandardButton.Yes:
@@ -2463,7 +2464,7 @@ class MainWindow(QMainWindow):
         """Parcourt tous les fichiers .md des sessions passées et les indexe dans FAISS."""
         if not self._vector_index or not self._summarizer:
             from PyQt6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Erreur", "FAISS ou Summarizer non initialisé.")
+            QMessageBox.warning(self, tr("Erreur"), tr("FAISS ou Summarizer non initialisé."))
             return
 
         sum_dir = self._summarizer._dir
@@ -2492,8 +2493,8 @@ class MainWindow(QMainWindow):
             from PyQt6.QtWidgets import QMessageBox
             QMessageBox.information(
                 self, 
-                "Scan Terminé", 
-                f"{indexed} session(s) passée(s) ajoutée(s) à la mémoire de recherche."
+                tr("Scan Terminé"), 
+                tr("{} session(s) passée(s) ajoutée(s) à la mémoire de recherche.").format(indexed)
             )
         except Exception as e:
             logger.error("MainWindow — erreur lors du scan de l'historique : %s", e)
@@ -2551,7 +2552,7 @@ class MainWindow(QMainWindow):
     def _on_contradiction(self, description: str):
         """L'Archiviste a détecté une contradiction dans le texte injecté."""
         self.ai_panel.append_injected(
-            "⚠ Contradiction détectée par l'Archiviste",
+            tr("⚠ Contradiction détectée par l'Archiviste"),
             description,
         )
 
@@ -2569,9 +2570,9 @@ class MainWindow(QMainWindow):
         logger.info("[DOC:MODE] mode document %s", "activé" if enabled else "désactivé")
         if enabled and self._doc_ctrl.is_connected():
             self.ai_panel.append_injected(
-                "EUGENIA",
-                "Mode document activé. Je lirai le contenu de l'éditeur à chaque "
-                "message et proposerai automatiquement d'y insérer mes réponses.",
+                tr("EUGENIA"),
+                tr("Mode document activé. Je lirai le contenu de l'éditeur à chaque "
+                "message et proposerai automatiquement d'y insérer mes réponses."),
             )
 
     def _on_config_saved(self, _config: dict):
@@ -2763,9 +2764,9 @@ class MainWindow(QMainWindow):
         logger.info("[DOC:MODE] mode document %s", "activé" if enabled else "désactivé")
         if enabled and self._doc_ctrl.is_connected():
             self.ai_panel.append_injected(
-                "EUGENIA",
-                "Mode document activé. Je lirai le contenu de l'éditeur à chaque message "
-                "et proposerai automatiquement d'y insérer mes réponses.",
+                tr("EUGENIA"),
+                tr("Mode document activé. Je lirai le contenu de l'éditeur à chaque message "
+                "et proposerai automatiquement d'y insérer mes réponses."),
             )
 
     def _on_insert_in_editor(self, text: str) -> None:
@@ -2775,8 +2776,8 @@ class MainWindow(QMainWindow):
         """
         if not self._doc_ctrl.is_connected():
             self.ai_panel.append_injected(
-                "EUGENIA",
-                "Aucun éditeur attaché. Utilisez [ attacher éditeur ] en bas du panneau.",
+                tr("EUGENIA"),
+                tr("Aucun éditeur attaché. Utilisez [ attacher éditeur ] en bas du panneau."),
             )
             return
         original = self._doc_ctrl.read_selection()

@@ -47,6 +47,7 @@ _CONFIG_DEFAULTS: dict = {
         "max_results": 5,
     },
     "theme":         "dark",
+    "language":      "fr",
     "font_size":     13,
     "font_family":   "Segoe UI",
     "chat_lh":       1.6,
@@ -191,6 +192,9 @@ def load_config() -> dict:
     # Theme (cle plate, pas un sous-dict)
     if "theme" in raw and isinstance(raw["theme"], str):
         result["theme"] = raw["theme"]
+    # Langue (cle plate)
+    if "language" in raw and isinstance(raw["language"], str):
+        result["language"] = raw["language"]
     # Taille police (cle plate)
     if "font_size" in raw:
         try:
