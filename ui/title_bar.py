@@ -92,7 +92,10 @@ class CustomTitleBar(QWidget):
             parent = self.window()
             if parent.isMaximized():
                 parent.showNormal()
-                # Adjust position so mouse is still on title bar
+                # Laisser à l'OS le temps de repasser en mode normal avant de déplacer.
+                # On met simplement à jour le point de départ du glissement.
+                self._start_pos = event.globalPosition().toPoint()
+                return
                 
             delta = event.globalPosition().toPoint() - self._start_pos
             parent.move(parent.pos() + delta)

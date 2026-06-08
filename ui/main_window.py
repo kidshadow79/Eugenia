@@ -130,8 +130,6 @@ class MainWindow(QMainWindow):
             cfg.get("chat_lh", None),
         )
 
-
-
     def _restore_layout(self) -> None:
         """Restaure la geometrie de la fenetre et les tailles du splitter depuis QSettings."""
         s = QSettings("EUGENIA", "Layout")
@@ -139,19 +137,7 @@ class MainWindow(QMainWindow):
         splitter_state: QByteArray = s.value("splitter/state")  # type: ignore[assignment]
         if geometry and not geometry.isEmpty():
             self.restoreGeometry(geometry)
-            # S'assurer que la géométrie restaurée ne dépasse pas l'écran disponible (changement de moniteur, etc.)
-            # Ne pas appeler setGeometry si la fenêtre a été restaurée en état maximisé
-            if not self.isMaximized():
-                screen = QApplication.primaryScreen().availableGeometry()
-                geo = self.geometry()
-                
-                w = min(geo.width(), int(screen.width() * 0.98))
-                h = min(geo.height(), int(screen.height() * 0.98))
-                
-                x = max(screen.x(), min(geo.x(), screen.x() + screen.width() - w))
-                y = max(screen.y(), min(geo.y(), screen.y() + screen.height() - h))
-                
-                self.setGeometry(x, y, w, h)
+            self.showNormal()
         if splitter_state and not splitter_state.isEmpty():
             self.splitter.restoreState(splitter_state)
         ai_saved = s.value("ai_panel/saved_width")
@@ -1136,20 +1122,27 @@ class MainWindow(QMainWindow):
 
     def _on_screenshot_requested(self) -> None:
         """
-        Capture la fenêtre de l'éditeur embarqué et l'attache comme pièce jointe
-        QPixmap de la fenêtre Win32, puis l'encode en PNG base64.
+        Capture la zone d'affichage de l'éditeur sur l'écran global
+        pour contourner les limitations d'accélération matérielle (GPU) des applications tierces.
         """
         import base64
-        from PyQt6.QtCore import QBuffer, QByteArray
+        from PyQt6.QtCore import QBuffer, QByteArray, QPoint
         from PyQt6.QtCore import QIODeviceBase
         hwnd = self.editor_zone.embedded_hwnd
         if hwnd is None:
             logger.warning("[SCREENSHOT] aucun éditeur attaché")
             return
+        
+        # Obtenir les coordonnées globales absolues du widget de l'éditeur à l'écran
+        top_left = self.editor_zone.mapToGlobal(QPoint(0, 0))
+        size = self.editor_zone.size()
+        
+        # Capturer l'écran global (bureau = 0) sur la zone correspondante
         screen = QApplication.primaryScreen()
-        pixmap = screen.grabWindow(hwnd)
+        pixmap = screen.grabWindow(0, top_left.x(), top_left.y(), size.width(), size.height())
+        
         if pixmap.isNull():
-            logger.warning("[SCREENSHOT] grabWindow a échoué pour hwnd=%d", hwnd)
+            logger.warning("[SCREENSHOT] grabWindow a échoué via l'écran global")
             return
         buf = QBuffer()
         buf.open(QIODeviceBase.OpenModeFlag.WriteOnly)
@@ -3053,35 +3046,27 @@ class MainWindow(QMainWindow):
 
     def _init_resize_grips(self):
         """Initialise les 8 grips de redimensionnement transparents en bordure."""
-        central = self.centralWidget()
         self._resize_widgets = {
-            "top": ResizeGripWidget(central, "top", Qt.CursorShape.SizeVerCursor),
-            "bottom": ResizeGripWidget(central, "bottom", Qt.CursorShape.SizeVerCursor),
-            "left": ResizeGripWidget(central, "left", Qt.CursorShape.SizeHorCursor),
-            "right": ResizeGripWidget(central, "right", Qt.CursorShape.SizeHorCursor),
-            "top_left": ResizeGripWidget(central, "top_left", Qt.CursorShape.SizeFDiagCursor),
-            "top_right": ResizeGripWidget(central, "top_right", Qt.CursorShape.SizeBDiagCursor),
-            "bottom_left": ResizeGripWidget(central, "bottom_left", Qt.CursorShape.SizeBDiagCursor),
-            "bottom_right": ResizeGripWidget(central, "bottom_right", Qt.CursorShape.SizeFDiagCursor),
+            "top": ResizeGripWidget(self, "top", Qt.CursorShape.SizeVerCursor),
+            "bottom": ResizeGripWidget(self, "bottom", Qt.CursorShape.SizeVerCursor),
+            "left": ResizeGripWidget(self, "left", Qt.CursorShape.SizeHorCursor),
+            "right": ResizeGripWidget(self, "right", Qt.CursorShape.SizeHorCursor),
+            "top_left": ResizeGripWidget(self, "top_left", Qt.CursorShape.SizeFDiagCursor),
+            "top_right": ResizeGripWidget(self, "top_right", Qt.CursorShape.SizeBDiagCursor),
+            "bottom_left": ResizeGripWidget(self, "bottom_left", Qt.CursorShape.SizeBDiagCursor),
+            "bottom_right": ResizeGripWidget(self, "bottom_right", Qt.CursorShape.SizeFDiagCursor),
         }
         for widget in self._resize_widgets.values():
             widget.raise_()
             widget.show()
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
+    def _reposition_resize_grips(self):
+        """Repositionne géométriquement les poignées sur les bords de la fenêtre."""
         if hasattr(self, "_resize_widgets"):
             w = self.width()
             h = self.height()
             m = 5  # Épaisseur de la bordure réactive en pixels
             
-            maximized = self.isMaximized() or self.isFullScreen()
-            for widget in self._resize_widgets.values():
-                widget.setVisible(not maximized)
-            if maximized:
-                return
-                
-            # Positionnement géométrique des grips
             self._resize_widgets["top_left"].setGeometry(0, 0, m, m)
             self._resize_widgets["top_right"].setGeometry(w - m, 0, m, m)
             self._resize_widgets["bottom_left"].setGeometry(0, h - m, m, m)
@@ -3092,17 +3077,27 @@ class MainWindow(QMainWindow):
             self._resize_widgets["left"].setGeometry(0, m, m, h - 2*m)
             self._resize_widgets["right"].setGeometry(w - m, m, m, h - 2*m)
             
-            # Garantir la superposition au premier plan
             for widget in self._resize_widgets.values():
                 widget.raise_()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "_resize_widgets"):
+            maximized = self.isMaximized()
+            for widget in self._resize_widgets.values():
+                widget.setVisible(not maximized)
+            if not maximized:
+                self._reposition_resize_grips()
 
     def changeEvent(self, event):
         super().changeEvent(event)
         if event.type() == event.Type.WindowStateChange:
             if hasattr(self, "_resize_widgets"):
-                maximized = self.isMaximized() or self.isFullScreen()
+                maximized = self.isMaximized()
                 for widget in self._resize_widgets.values():
                     widget.setVisible(not maximized)
+                if not maximized:
+                    self._reposition_resize_grips()
 
 
 class ResizeGripWidget(QWidget):
@@ -3117,16 +3112,12 @@ class ResizeGripWidget(QWidget):
         self._drag_start_geometry = None
 
     def mousePressEvent(self, event):
-        if self.window().isMaximized() or self.window().isFullScreen():
-            return
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_start_pos = event.globalPosition().toPoint()
             self._drag_start_geometry = self.window().geometry()
             event.accept()
 
     def mouseMoveEvent(self, event):
-        if self.window().isMaximized() or self.window().isFullScreen():
-            return
         if self._drag_start_pos is not None:
             delta = event.globalPosition().toPoint() - self._drag_start_pos
             geo = self._drag_start_geometry
