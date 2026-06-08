@@ -14,7 +14,7 @@ est draggable. La col 3 absorbe l'espace libre quand un panneau se ferme.
 import json as _json
 import re
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget
-from PyQt6.QtCore import Qt, QSettings, QByteArray, QTimer, pyqtSignal
+from PyQt6.QtCore import Qt, QSettings, QByteArray, QTimer, pyqtSignal, QPoint
 from PyQt6.QtGui import QIcon
 from ui.edit_panel import EditPanel
 from ui.title_bar import CustomTitleBar
@@ -118,6 +118,8 @@ class MainWindow(QMainWindow):
             cfg.get("font_family", None),
             cfg.get("chat_lh", None),
         )
+
+
 
     def _restore_layout(self) -> None:
         """Restaure la geometrie de la fenetre et les tailles du splitter depuis QSettings."""
@@ -450,6 +452,9 @@ class MainWindow(QMainWindow):
 
         # Garde une référence à la notification active pour éviter les doublons
         self._active_notif: ClipboardNotification | None = None
+
+        # Initialiser les grips de redimensionnement transparents
+        self._init_resize_grips()
 
     def _toggle_maximize(self):
         if self.isMaximized():
@@ -3021,4 +3026,106 @@ class MainWindow(QMainWindow):
         # que l'événement initial ignoré n'annule la fermeture.
         from PyQt6.QtCore import QTimer
         QTimer.singleShot(0, self.close)   # relance closeEvent → passe 2
+
+    def _init_resize_grips(self):
+        """Initialise les 8 grips de redimensionnement transparents en bordure."""
+        self._resize_widgets = {
+            "top": ResizeGripWidget(self, "top", Qt.CursorShape.SizeVerCursor),
+            "bottom": ResizeGripWidget(self, "bottom", Qt.CursorShape.SizeVerCursor),
+            "left": ResizeGripWidget(self, "left", Qt.CursorShape.SizeHorCursor),
+            "right": ResizeGripWidget(self, "right", Qt.CursorShape.SizeHorCursor),
+            "top_left": ResizeGripWidget(self, "top_left", Qt.CursorShape.SizeFDiagCursor),
+            "top_right": ResizeGripWidget(self, "top_right", Qt.CursorShape.SizeBDiagCursor),
+            "bottom_left": ResizeGripWidget(self, "bottom_left", Qt.CursorShape.SizeBDiagCursor),
+            "bottom_right": ResizeGripWidget(self, "bottom_right", Qt.CursorShape.SizeFDiagCursor),
+        }
+        for widget in self._resize_widgets.values():
+            widget.raise_()
+            widget.show()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "_resize_widgets"):
+            w = self.width()
+            h = self.height()
+            m = 5  # Épaisseur de la bordure réactive en pixels
+            
+            maximized = self.isMaximized()
+            for widget in self._resize_widgets.values():
+                widget.setVisible(not maximized)
+            if maximized:
+                return
+                
+            # Positionnement géométrique des grips
+            self._resize_widgets["top_left"].setGeometry(0, 0, m, m)
+            self._resize_widgets["top_right"].setGeometry(w - m, 0, m, m)
+            self._resize_widgets["bottom_left"].setGeometry(0, h - m, m, m)
+            self._resize_widgets["bottom_right"].setGeometry(w - m, h - m, m, m)
+            
+            self._resize_widgets["top"].setGeometry(m, 0, w - 2*m, m)
+            self._resize_widgets["bottom"].setGeometry(m, h - m, w - 2*m, m)
+            self._resize_widgets["left"].setGeometry(0, m, m, h - 2*m)
+            self._resize_widgets["right"].setGeometry(w - m, m, m, h - 2*m)
+            
+            # Garantir la superposition au premier plan
+            for widget in self._resize_widgets.values():
+                widget.raise_()
+
+
+class ResizeGripWidget(QWidget):
+    """Bandeau invisible gérant le redimensionnement d'une fenêtre frameless."""
+    def __init__(self, parent, edge: str, cursor_shape: Qt.CursorShape):
+        super().__init__(parent)
+        self._edge = edge
+        self.setCursor(cursor_shape)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setStyleSheet("background: transparent;")
+        self._drag_start_pos = None
+        self._drag_start_geometry = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start_pos = event.globalPosition().toPoint()
+            self._drag_start_geometry = self.window().geometry()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self._drag_start_pos is not None:
+            delta = event.globalPosition().toPoint() - self._drag_start_pos
+            geo = self._drag_start_geometry
+            
+            x, y, w, h = geo.x(), geo.y(), geo.width(), geo.height()
+            window = self.window()
+            min_w = window.minimumWidth()
+            min_h = window.minimumHeight()
+            
+            edge = self._edge
+            
+            if "left" in edge:
+                new_w = w - delta.x()
+                if new_w >= min_w:
+                    x = geo.x() + delta.x()
+                    w = new_w
+            elif "right" in edge:
+                new_w = w + delta.x()
+                if new_w >= min_w:
+                    w = new_w
+                    
+            if "top" in edge:
+                new_h = h - delta.y()
+                if new_h >= min_h:
+                    y = geo.y() + delta.y()
+                    h = new_h
+            elif "bottom" in edge:
+                new_h = h + delta.y()
+                if new_h >= min_h:
+                    h = new_h
+                    
+            window.setGeometry(x, y, w, h)
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self._drag_start_pos = None
+        self._drag_start_geometry = None
+        event.accept()
 

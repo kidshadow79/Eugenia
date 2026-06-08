@@ -398,14 +398,13 @@ class EditorZone(QWidget):
             target_thread = user32.GetWindowThreadProcessId(target_hwnd, None)
             
             attached = False
-            if target_thread and target_thread != current_thread:
-                attached = user32.AttachThreadInput(current_thread, target_thread, True)
-                
-            win32gui.SetFocus(target_hwnd)
-            
-            # On detache immediatement pour eviter le blocage / lags du navigateur
-            if attached:
-                user32.AttachThreadInput(current_thread, target_thread, False)
+            try:
+                if target_thread and target_thread != current_thread:
+                    attached = user32.AttachThreadInput(current_thread, target_thread, True)
+                win32gui.SetFocus(target_hwnd)
+            finally:
+                if attached:
+                    user32.AttachThreadInput(current_thread, target_thread, False)
                 
         except Exception as e:
             logger.warning("EditorZone._give_focus_to_browser — echec du focus : %s", e)

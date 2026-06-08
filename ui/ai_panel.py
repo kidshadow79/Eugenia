@@ -37,31 +37,13 @@ def _apply_chat_line_height(chat: "QTextEdit", lh: float) -> None:
 def _build_embed_footer_style(fc: FontConfig) -> str:
     return f"""
 QPushButton#EmbedBtn {{
-    background: transparent;
-    color: #777777;
-    border: none;
-    border-radius: 3px;
-    padding: 2px 5px;
     font-size: {fc.xs}px;
-}}
-QPushButton#EmbedBtn:hover {{
-    color: #aaaaaa;
-    background-color: #3a3a3a;
 }}
 QPushButton#DocModeBtn {{
-    background: transparent;
-    color: #777777;
-    border: none;
-    border-radius: 3px;
-    padding: 2px 5px;
     font-size: {fc.xs}px;
 }}
-QPushButton#DocModeBtn:hover {{
-    color: #aaaaaa;
-    background-color: #3a3a3a;
-}}
-QPushButton#DocModeBtn:checked {{
-    color: #d4a657;
+QPushButton#InsertBtn {{
+    font-size: {fc.xs}px;
 }}
 """
 
@@ -426,10 +408,10 @@ class AIPanel(QWidget):
         # Footer embed
         self._embed_footer = QWidget()
         self._embed_footer.setObjectName("EmbedFooter")
-        self._embed_footer.setFixedHeight(22)
+        self._embed_footer.setFixedHeight(34)
         footer_layout = QHBoxLayout(self._embed_footer)
-        footer_layout.setContentsMargins(4, 0, 4, 0)
-        footer_layout.setSpacing(0)
+        footer_layout.setContentsMargins(6, 4, 6, 4)
+        footer_layout.setSpacing(6)
 
         self._embed_btn = QPushButton()
         self._embed_btn.setObjectName("EmbedBtn")

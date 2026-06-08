@@ -708,12 +708,45 @@ QPushButton#EmbedBtn {{
     background: transparent;
     color: {c['text_muted']};
     border: none;
-    font-size: {fc.xs}px;
-    padding: 4px 10px;
-    text-align: left;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-height: 24px;
 }}
 QPushButton#EmbedBtn:hover {{
-    color: {c['text_dim']};
+    color: {c['text_primary']};
+    background-color: {c['item_hover']};
+}}
+QPushButton#InsertBtn {{
+    background-color: {c['bg_input']};
+    color: {c['accent']};
+    border: 1px solid {c['border_input']};
+    border-radius: 4px;
+    padding: 4px 12px;
+    min-height: 24px;
+    font-weight: bold;
+}}
+QPushButton#InsertBtn:hover {{
+    background-color: {c['item_hover']};
+    border-color: {c['accent']};
+    color: {c['text_bright']};
+}}
+QPushButton#InsertBtn:pressed {{
+    background-color: {c['item_select']};
+}}
+QPushButton#DocModeBtn {{
+    background: transparent;
+    color: {c['text_muted']};
+    border: none;
+    border-radius: 3px;
+    padding: 4px 8px;
+    min-height: 24px;
+}}
+QPushButton#DocModeBtn:hover {{
+    color: {c['text_primary']};
+    background-color: {c['item_hover']};
+}}
+QPushButton#DocModeBtn:checked {{
+    color: {c['accent']};
 }}
 QCheckBox#DocModeCheck {{
     color: {c['text_dim']};
