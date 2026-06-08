@@ -100,8 +100,19 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(tr("EUGENIA — {}  ({})").format(project, author))
         self.setWindowIcon(QIcon("assets/logo.png"))
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
-        self.setMinimumSize(1200, 700)
-        self.resize(1400, 800)
+        # Ajuster les dimensions de démarrage selon l'écran disponible (évite le hors-écran)
+        screen = QApplication.primaryScreen().availableGeometry()
+        screen_w = screen.width()
+        screen_h = screen.height()
+        
+        w = min(1400, int(screen_w * 0.95))
+        h = min(800, int(screen_h * 0.95))
+        
+        min_w = min(1200, int(screen_w * 0.9))
+        min_h = min(700, int(screen_h * 0.9))
+        
+        self.setMinimumSize(min_w, min_h)
+        self.resize(w, h)
         # Appliquer le theme depuis la config (defaut dark)
         cfg = load_config()
         from ui.theme_config import ThemeConfig
@@ -128,6 +139,17 @@ class MainWindow(QMainWindow):
         splitter_state: QByteArray = s.value("splitter/state")  # type: ignore[assignment]
         if geometry and not geometry.isEmpty():
             self.restoreGeometry(geometry)
+            # S'assurer que la géométrie restaurée ne dépasse pas l'écran disponible (changement de moniteur, etc.)
+            screen = QApplication.primaryScreen().availableGeometry()
+            geo = self.geometry()
+            
+            w = min(geo.width(), int(screen.width() * 0.98))
+            h = min(geo.height(), int(screen.height() * 0.98))
+            
+            x = max(screen.x(), min(geo.x(), screen.x() + screen.width() - w))
+            y = max(screen.y(), min(geo.y(), screen.y() + screen.height() - h))
+            
+            self.setGeometry(x, y, w, h)
         if splitter_state and not splitter_state.isEmpty():
             self.splitter.restoreState(splitter_state)
         ai_saved = s.value("ai_panel/saved_width")
@@ -3029,15 +3051,16 @@ class MainWindow(QMainWindow):
 
     def _init_resize_grips(self):
         """Initialise les 8 grips de redimensionnement transparents en bordure."""
+        central = self.centralWidget()
         self._resize_widgets = {
-            "top": ResizeGripWidget(self, "top", Qt.CursorShape.SizeVerCursor),
-            "bottom": ResizeGripWidget(self, "bottom", Qt.CursorShape.SizeVerCursor),
-            "left": ResizeGripWidget(self, "left", Qt.CursorShape.SizeHorCursor),
-            "right": ResizeGripWidget(self, "right", Qt.CursorShape.SizeHorCursor),
-            "top_left": ResizeGripWidget(self, "top_left", Qt.CursorShape.SizeFDiagCursor),
-            "top_right": ResizeGripWidget(self, "top_right", Qt.CursorShape.SizeBDiagCursor),
-            "bottom_left": ResizeGripWidget(self, "bottom_left", Qt.CursorShape.SizeBDiagCursor),
-            "bottom_right": ResizeGripWidget(self, "bottom_right", Qt.CursorShape.SizeFDiagCursor),
+            "top": ResizeGripWidget(central, "top", Qt.CursorShape.SizeVerCursor),
+            "bottom": ResizeGripWidget(central, "bottom", Qt.CursorShape.SizeVerCursor),
+            "left": ResizeGripWidget(central, "left", Qt.CursorShape.SizeHorCursor),
+            "right": ResizeGripWidget(central, "right", Qt.CursorShape.SizeHorCursor),
+            "top_left": ResizeGripWidget(central, "top_left", Qt.CursorShape.SizeFDiagCursor),
+            "top_right": ResizeGripWidget(central, "top_right", Qt.CursorShape.SizeBDiagCursor),
+            "bottom_left": ResizeGripWidget(central, "bottom_left", Qt.CursorShape.SizeBDiagCursor),
+            "bottom_right": ResizeGripWidget(central, "bottom_right", Qt.CursorShape.SizeFDiagCursor),
         }
         for widget in self._resize_widgets.values():
             widget.raise_()
