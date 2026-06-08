@@ -183,9 +183,11 @@ class ArchivisteWriter(QObject):
             else getattr(bible_db, '_tables', None) or DEFAULT_CATEGORIES
         )
         self._system_prompt = build_writer_prompt(self._categories)
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )
         self._worker: _WriterCallWorker | None = None
 
@@ -407,7 +409,9 @@ class ArchivisteWriter(QObject):
     def update_config(self, config: dict) -> None:
         """Met à jour la config API (appelé si l'utilisateur change les paramètres)."""
         self._model = config.get("model", "gpt-4o-mini")
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )

@@ -158,9 +158,11 @@ class RollingSummarizer(QObject):
 
     def __init__(self, engine_config: dict, meta_path: Path, parent=None):
         super().__init__(parent)
+        api_key_val = engine_config.get("api_key", "")
         self._client = OpenAI(
-            api_key=engine_config["api_key"],
-            base_url=engine_config.get("base_url"),
+            api_key=api_key_val.strip() if api_key_val else "",
+            base_url=engine_config.get("base_url") or None,
+            default_headers=engine_config.get("extra_headers") or None,
         )
         self._model     = engine_config["model"]
         self._meta_path = meta_path

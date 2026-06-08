@@ -115,9 +115,11 @@ class AIEngine(QObject):
         if on_error:
             self.error_occurred.connect(on_error)
         self._model = config.get("model", "gpt-4o-mini")
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config.get("api_key", ""),
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url", None),  # None = OpenAI par défaut
+            default_headers=config.get("extra_headers") or None,
         )
         # Historique : commence avec le système prompt
         # Priorité : config["system_prompt"] > constante module

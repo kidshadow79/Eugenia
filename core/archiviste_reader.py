@@ -127,9 +127,11 @@ class ArchivisteReader(QObject):
         self._bible_db = bible_db
         self._model = config.get("model", "gpt-4o-mini")
         self._system_prompt = load_prompt("archiviste_reader")
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )
         self._worker: _ReaderCallWorker | None = None
 
@@ -168,7 +170,9 @@ class ArchivisteReader(QObject):
     def update_config(self, config: dict) -> None:
         """Met à jour la config API."""
         self._model = config.get("model", "gpt-4o-mini")
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )

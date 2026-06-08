@@ -80,9 +80,11 @@ class StyleProfiler(QObject):
         super().__init__()
         self._dir = project_dir
         self._path = project_dir / _PROFILE_FILE
+        api_key_val = engine_config.get("api_key", "")
         self._client = OpenAI(
-            api_key=engine_config["api_key"],
-            base_url=engine_config.get("base_url"),
+            api_key=api_key_val.strip() if api_key_val else "",
+            base_url=engine_config.get("base_url") or None,
+            default_headers=engine_config.get("extra_headers") or None,
         )
         self._model = engine_config["model"]
         self._system_prompt = load_prompt("style_profiler")

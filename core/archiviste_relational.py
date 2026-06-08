@@ -217,9 +217,11 @@ class ArchivisteRelational(QObject):
         self._relational_db = relational_db
         self._model = config.get("model", "gpt-4o-mini")
         self._system_prompt = load_prompt("archiviste_relational")
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )
         self._worker: _RelationalCallWorker | None = None
 
@@ -296,9 +298,11 @@ class ArchivisteRelational(QObject):
     def update_config(self, config: dict) -> None:
         """Met à jour la config API."""
         self._model = config.get("model", "gpt-4o-mini")
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )
 
     def _on_mem_routed(self, data: dict) -> None:

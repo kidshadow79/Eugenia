@@ -42,11 +42,15 @@ def _filter_embed(model_ids: list[str]) -> list[str]:
 
 # ─── Fonctions de fetch par stratégie ─────────────────────────────────────────
 
-def _fetch_openai_compatible(api_key: str, base_url: str | None, embed_mode: bool) -> list[str]:
+def _fetch_openai_compatible(api_key: str, base_url: str | None, embed_mode: bool, extra_headers: dict | None = None) -> list[str]:
     """
     Utilise le SDK openai — fonctionne pour tout endpoint /v1/models compatible.
     """
-    client = OpenAI(api_key=api_key, base_url=base_url)
+    client = OpenAI(
+        api_key=api_key.strip() if api_key else "",
+        base_url=base_url,
+        default_headers=extra_headers
+    )
     all_ids = sorted(m.id for m in client.models.list().data)
     return _filter_embed(all_ids) if embed_mode else _filter_chat(all_ids)
 
@@ -150,4 +154,6 @@ class ModelFetchWorker(QThread):
 
         # Tous les autres : OpenAI-compatible
         base_url = get_base_url(pid)
-        return _fetch_openai_compatible(self._api_key, base_url, self._embed_mode)
+        from core.providers import get_extra_headers
+        extra_headers = get_extra_headers(pid) or None
+        return _fetch_openai_compatible(self._api_key, base_url, self._embed_mode, extra_headers)

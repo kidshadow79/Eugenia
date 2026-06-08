@@ -216,9 +216,11 @@ class BioActivation(QObject):
         parent=None,
     ):
         super().__init__(parent)
-        self._client      = OpenAI(
-            api_key=config["api_key"],
+        api_key_val = config.get("api_key", "")
+        self._client = OpenAI(
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )
         self._model       = config.get("model", "gpt-4o-mini")
         self._bio_path    = bio_path
@@ -252,9 +254,11 @@ class BioActivation(QObject):
     def update_config(self, config: dict) -> None:
         """Met a jour la config API (apres sauvegarde Parametres)."""
         self._model = config.get("model", "gpt-4o-mini")
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )
 
     def _on_worker_done(self, injection: str) -> None:

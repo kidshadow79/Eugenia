@@ -68,9 +68,11 @@ class AnnotationGenerator(QThread):
             context_clip:  dernier extrait partagé dans le contexte IA
         """
         super().__init__(parent)
+        api_key_val = config.get("api_key", "")
         self._client = OpenAI(
-            api_key=config["api_key"],
+            api_key=api_key_val.strip() if api_key_val else "",
             base_url=config.get("base_url") or None,
+            default_headers=config.get("extra_headers") or None,
         )
         self._model        = config.get("model", "mistral-small-latest")
         self._request      = user_request

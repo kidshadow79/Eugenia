@@ -113,6 +113,10 @@ PROVIDERS: dict[str, dict] = {
         "base_url":    "https://openrouter.ai/api/v1",
         "key_hint":    "sk-or-...",
         "key_url":     "https://openrouter.ai/settings/keys",
+        "extra_headers": {
+            "HTTP-Referer": "https://github.com",
+            "X-Title": "EUGENIA"
+        },
         "chat_models": [
             "openai/gpt-4o",
             "openai/gpt-4o-mini",
