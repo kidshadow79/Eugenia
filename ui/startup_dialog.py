@@ -147,6 +147,7 @@ QPushButton#LangBtn {
     border-radius: 4px;
     font-size: 11px;
     font-weight: bold;
+    padding: 0px;
 }
 QPushButton#LangBtn:hover {
     background-color: #3e3e42;
@@ -319,14 +320,14 @@ class StartupDialog(QDialog):
         lang_layout.setSpacing(2)
 
         self._btn_fr = QPushButton("FR")
-        self._btn_fr.setFixedSize(32, 24)
+        self._btn_fr.setFixedSize(40, 24)
         self._btn_fr.setObjectName("LangBtn")
         self._btn_fr.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_fr.setToolTip(tr("Basculer l'interface en français"))
         self._btn_fr.clicked.connect(lambda: self._set_language("fr"))
 
         self._btn_en = QPushButton("EN")
-        self._btn_en.setFixedSize(32, 24)
+        self._btn_en.setFixedSize(40, 24)
         self._btn_en.setObjectName("LangBtn")
         self._btn_en.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_en.setToolTip(tr("Basculer l'interface en anglais"))
