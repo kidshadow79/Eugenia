@@ -108,8 +108,8 @@ class MainWindow(QMainWindow):
         w = min(1400, int(screen_w * 0.95))
         h = min(800, int(screen_h * 0.95))
         
-        min_w = min(1200, int(screen_w * 0.9))
-        min_h = min(700, int(screen_h * 0.9))
+        min_w = min(1000, int(screen_w * 0.85))
+        min_h = min(650, int(screen_h * 0.85))
         
         self.setMinimumSize(min_w, min_h)
         self.resize(w, h)
@@ -140,16 +140,18 @@ class MainWindow(QMainWindow):
         if geometry and not geometry.isEmpty():
             self.restoreGeometry(geometry)
             # S'assurer que la géométrie restaurée ne dépasse pas l'écran disponible (changement de moniteur, etc.)
-            screen = QApplication.primaryScreen().availableGeometry()
-            geo = self.geometry()
-            
-            w = min(geo.width(), int(screen.width() * 0.98))
-            h = min(geo.height(), int(screen.height() * 0.98))
-            
-            x = max(screen.x(), min(geo.x(), screen.x() + screen.width() - w))
-            y = max(screen.y(), min(geo.y(), screen.y() + screen.height() - h))
-            
-            self.setGeometry(x, y, w, h)
+            # Ne pas appeler setGeometry si la fenêtre a été restaurée en état maximisé
+            if not self.isMaximized():
+                screen = QApplication.primaryScreen().availableGeometry()
+                geo = self.geometry()
+                
+                w = min(geo.width(), int(screen.width() * 0.98))
+                h = min(geo.height(), int(screen.height() * 0.98))
+                
+                x = max(screen.x(), min(geo.x(), screen.x() + screen.width() - w))
+                y = max(screen.y(), min(geo.y(), screen.y() + screen.height() - h))
+                
+                self.setGeometry(x, y, w, h)
         if splitter_state and not splitter_state.isEmpty():
             self.splitter.restoreState(splitter_state)
         ai_saved = s.value("ai_panel/saved_width")
@@ -3073,7 +3075,7 @@ class MainWindow(QMainWindow):
             h = self.height()
             m = 5  # Épaisseur de la bordure réactive en pixels
             
-            maximized = self.isMaximized()
+            maximized = self.isMaximized() or self.isFullScreen()
             for widget in self._resize_widgets.values():
                 widget.setVisible(not maximized)
             if maximized:
@@ -3094,6 +3096,14 @@ class MainWindow(QMainWindow):
             for widget in self._resize_widgets.values():
                 widget.raise_()
 
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() == event.Type.WindowStateChange:
+            if hasattr(self, "_resize_widgets"):
+                maximized = self.isMaximized() or self.isFullScreen()
+                for widget in self._resize_widgets.values():
+                    widget.setVisible(not maximized)
+
 
 class ResizeGripWidget(QWidget):
     """Bandeau invisible gérant le redimensionnement d'une fenêtre frameless."""
@@ -3107,12 +3117,16 @@ class ResizeGripWidget(QWidget):
         self._drag_start_geometry = None
 
     def mousePressEvent(self, event):
+        if self.window().isMaximized() or self.window().isFullScreen():
+            return
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_start_pos = event.globalPosition().toPoint()
             self._drag_start_geometry = self.window().geometry()
             event.accept()
 
     def mouseMoveEvent(self, event):
+        if self.window().isMaximized() or self.window().isFullScreen():
+            return
         if self._drag_start_pos is not None:
             delta = event.globalPosition().toPoint() - self._drag_start_pos
             geo = self._drag_start_geometry

@@ -320,6 +320,7 @@ CREATE TABLE contradictions (
 ## Règles de travail rappel (non négociables)
 
 - **Aucun code sans feu vert de Auteur**
+- **Ne jamais commettre et pousser de modifications (commit & push) avant qu'elles aient été testées et validées par l'Auteur**
 - **Pas de fallbacks** — si ça plante, ça doit planter visiblement, pas être masqué
 - **OGMA est la source** — auditer avant de concevoir, pas d'invention instinctive
 - **Équipe** — pas de décision solo, tout se discute
